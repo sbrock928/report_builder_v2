@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Custom Calculation Builder</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 0;
+            min-height: 70vh;
+        }
+
+        .sidebar {
+            background: #f8f9fa;
+            padding: 30px;
+            border-right: 1px solid #e9ecef;
+        }
+
+        .calculation-form {
+            padding: 30px;
+        }
+
+        .section {
+            margin-bottom: 30px;
+        }
+
+        .section h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-control:hover {
+            border-color: #dee2e6;
+        }
+
+        select.form-control {
+            cursor: pointer;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+            transform: translateY(-2px);
+        }
+
+        .saved-calculations {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .calc-item {
+            padding: 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .calc-item:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+            transform: translateY(-1px);
+        }
+
+        .calc-item.selected {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .calc-item h4 {
+            color: #2c3e50;
+            margin-bottom: 5px;
+            font-size: 1rem;
+        }
+
+        .calc-item p {
+            color: #6c757d;
+            font-size: 0.9rem;
+            margin: 0;
+        }
+
+        .calc-meta {
+            font-size: 0.8rem;
+            color: #adb5bd;
+            margin-top: 5px;
+        }
+
+        .conditional-fields {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 15px;
+            border-left: 4px solid #667eea;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .preview-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .preview-code {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid #e9ecef;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .tab.active {
+            border-bottom-color: #667eea;
+            color: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 1.8rem;
+            }
+            
+            .button-group {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Custom Calculation Builder</h1>
+            <p>Create and manage dynamic calculations for financial analysis</p>
+        </div>
+
+        <div class="main-content">
+            <div class="sidebar">
+                <div class="tabs">
+                    <div class="tab active" onclick="switchTab('saved')">Saved</div>
+                    <div class="tab" onclick="switchTab('templates')">Templates</div>
+                </div>
+
+                <div id="saved-tab" class="tab-content active">
+                    <div class="section">
+                        <h3>Saved Calculations</h3>
+                        <div class="saved-calculations">
+                            <div id="saved-calculations-list">
+                                <!-- Dynamically populated -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="templates-tab" class="tab-content">
+                    <div class="section">
+                        <h3>Calculation Templates</h3>
+                        <div class="saved-calculations">
+                            <div id="templates-list">
+                                <!-- Dynamically populated -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="calculation-form">
+                <div id="alert-container"></div>
+
+                <form id="calculationForm">
+                    <div class="section">
+                        <h3>Basic Information</h3>
+                        
+                        <div class="form-group">
+                            <label for="calcName">Calculation Name *</label>
+                            <input type="text" id="calcName" name="calcName" class="form-control" 
+                                   placeholder="Enter a descriptive name" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="calcDescription">Description</label>
+                            <textarea id="calcDescription" name="calcDescription" class="form-control" 
+                                      rows="2" placeholder="Optional description"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <h3>Calculation Configuration</h3>
+                        
+                        <div class="form-group">
+                            <label for="calculationType">Calculation Type *</label>
+                            <select id="calculationType" name="calculationType" class="form-control" required>
+                                <option value="">Select calculation type...</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="targetField">Target Field *</label>
+                            <select id="targetField" name="targetField" class="form-control" required>
+                                <option value="">Select field to calculate on...</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="aggregationLevel">Aggregation Level *</label>
+                            <select id="aggregationLevel" name="aggregationLevel" class="form-control" required>
+                                <option value="">Select aggregation level...</option>
+                                <option value="deal">Deal Level</option>
+                                <option value="tranche">Tranche Level</option>
+                            </select>
+                        </div>
+
+                        <div id="conditionalFields" class="conditional-fields" style="display: none;">
+                            <!-- Dynamically populated based on calculation type -->
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <h3>Filters (Optional)</h3>
+                        
+                        <div class="form-group">
+                            <label for="cycleFilter">Cycle Filter</label>
+                            <input type="number" id="cycleFilter" name="cycleFilter" class="form-control" 
+                                   placeholder="e.g., 202412 for December 2024">
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <h3>Save Options</h3>
+                        
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="isPublic" name="isPublic"> 
+                                Make this calculation available to all users
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="button-group">
+                        <button type="button" class="btn btn-secondary" onclick="previewCalculation()">
+                            Preview SQL
+                        </button>
+                        <button type="button" class="btn btn-primary" onclick="testCalculation()">
+                            Test Calculation
+                        </button>
+                        <button type="submit" class="btn btn-success">
+                            Save Calculation
+                        </button>
+                    </div>
+                </form>
+
+                <div id="preview-section" class="preview-section" style="display: none;">
+                    <h3>Generated SQL Preview</h3>
+                    <div id="preview-code" class="preview-code"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // API configuration
+        const API_BASE = '/api';
+        
+        // Global data storage
+        let dropdownData = {
+            calculationTypes: [],
+            targetFields: [],
+            aggregationLevels: [],
+            savedCalculations: [],
+            templates: []
+        };
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            loadDropdownData();
+            setupEventListeners();
+        });
+
+        async function loadDropdownData() {
+            try {
+                const response = await fetch(`${API_BASE}/calculations/dropdown-data`);
+                if (!response.ok) throw new Error('Failed to load dropdown data');
+                
+                dropdownData = await response.json();
+                populateDropdowns();
+                loadSavedCalculations();
+                loadTemplates();
+                
+            } catch (error) {
+                console.error('Error loading dropdown data:', error);
+                showAlert('Failed to load dropdown data. Please refresh the page.', 'error');
+            }
+        }
+
+        function populateDropdowns() {
+            // Populate calculation types
+            const calcTypeSelect = document.getElementById('calculationType');
+            calcTypeSelect.innerHTML = '<option value="">Select calculation type...</option>';
+            dropdownData.calculationTypes.forEach(option => {
+                const optionElement = document.createElement('option');
+                optionElement.value = option.value;
+                optionElement.textContent = option.label;
+                optionElement.title = option.description;
+                calcTypeSelect.appendChild(optionElement);
+            });
+
+            // Populate target fields
+            const targetFieldSelect = document.getElementById('targetField');
+            targetFieldSelect.innerHTML = '<option value="">Select field to calculate on...</option>';
+            dropdownData.targetFields.forEach(option => {
+                const optionElement = document.createElement('option');
+                optionElement.value = option.value;
+                optionElement.textContent = option.label;
+                optionElement.title = option.description;
+                targetFieldSelect.appendChild(optionElement);
+            });
+        }
+
+        function loadSavedCalculations() {
+            const container = document.getElementById('saved-calculations-list');
+            container.innerHTML = '';
+
+            if (dropdownData.savedCalculations.length === 0) {
+                container.innerHTML = '<p style="color: #6c757d; text-align: center;">No saved calculations found.</p>';
+                return;
+            }
+
+            dropdownData.savedCalculations.forEach(calc => {
+                const calcElement = document.createElement('div');
+                calcElement.className = 'calc-item';
+                calcElement.onclick = () => loadCalculation(calc);
+                
+                calcElement.innerHTML = `
+                    <h4>${calc.name}</h4>
+                    <p>${calc.description || 'No description'}</p>
+                    <div class="calc-meta">
+                        ${calc.calculation_type} • ${calc.target_field} • ${calc.aggregation_level}
+                        ${calc.is_public ? ' • Public' : ' • Private'}
+                    </div>
+                `;
+                
+                container.appendChild(calcElement);
+            });
+        }
+
+        function loadTemplates() {
+            const container = document.getElementById('templates-list');
+            container.innerHTML = '';
+
+            if (dropdownData.templates.length === 0) {
+                container.innerHTML = '<p style="color: #6c757d; text-align: center;">No templates found.</p>';
+                return;
+            }
+
+            dropdownData.templates.forEach(template => {
+                const templateElement = document.createElement('div');
+                templateElement.className = 'calc-item';
+                templateElement.onclick = () => loadTemplate(template);
+                
+                templateElement.innerHTML = `
+                    <h4>${template.name}</h4>
+                    <p>${template.description}</p>
+                    <div class="calc-meta">
+                        ${template.calculation_type} • ${template.target_field} • ${template.aggregation_level}
+                    </div>
+                `;
+                
+                container.appendChild(templateElement);
+            });
+        }
+
+        function setupEventListeners() {
+            // Form submission
+            document.getElementById('calculationForm').addEventListener('submit', saveCalculation);
+            
+            // Calculation type change
+            document.getElementById('calculationType').addEventListener('change', updateConditionalFields);
+        }
+
+        function switchTab(tabName) {
+            // Update tab buttons
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelector(`.tab:nth-child(${tabName === 'saved' ? '1' : '2'})`).classList.add('active');
+            
+            // Update tab content
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+        }
+
+        function updateConditionalFields() {
+            const calcType = document.getElementById('calculationType').value;
+            const container = document.getElementById('conditionalFields');
+            
+            container.innerHTML = '';
+            container.style.display = 'none';
+
+            if (calcType === 'weighted_avg') {
+                container.style.display = 'block';
+                container.innerHTML = `
+                    <div class="form-group">
+                        <label for="weightField">Weight Field *</label>
+                        <select id="weightField" name="weightField" class="form-control" required>
+                            <option value="">Select weight field...</option>
+                            ${dropdownData.targetFields.map(field => 
+                                `<option value="${field.value}">${field.label}</option>`
+                            ).join('')}
+                        </select>
+                    </div>
+                `;
+            } else if (calcType === 'ratio' || calcType === 'percentage') {
+                container.style.display = 'block';
+                container.innerHTML = `
+                    <div class="form-group">
+                        <label for="denominatorField">Denominator Field *</label>
+                        <select id="denominatorField" name="denominatorField" class="form-control" required>
+                            <option value="">Select denominator field...</option>
+                            ${dropdownData.targetFields.map(field => 
+                                `<option value="${field.value}">${field.label}</option>`
+                            ).join('')}
+                        </select>
+                    </div>
+                `;
+            }
+        }
+
+        function loadCalculation(calc) {
+            // Remove previous selections
+            document.querySelectorAll('.calc-item').forEach(item => item.classList.remove('selected'));
+            event.currentTarget.classList.add('selected');
+
+            // Populate form with calculation data
+            document.getElementById('calcName').value = calc.name + ' (Copy)';
+            document.getElementById('calcDescription').value = calc.description || '';
+            document.getElementById('calculationType').value = calc.calculation_type;
+            document.getElementById('targetField').value = calc.target_field;
+            document.getElementById('aggregationLevel').value = calc.aggregation_level;
+            document.getElementById('cycleFilter').value = calc.cycle_filter || '';
+            document.getElementById('isPublic').checked = calc.is_public || false;
+
+            // Update conditional fields
+            updateConditionalFields();
+
+            // Set weight or denominator field if applicable
+            setTimeout(() => {
+                if (calc.weight_field && document.getElementById('weightField')) {
+                    document.getElementById('weightField').value = calc.weight_field;
+                }
+                if (calc.denominator_field && document.getElementById('denominatorField')) {
+                    document.getElementById('denominatorField').value = calc.denominator_field;
+                }
+            }, 100);
+
+            showAlert('Calculation loaded successfully!', 'success');
+        }
+
+        function loadTemplate(template) {
+            loadCalculation(template);
+        }
+
+        async function previewCalculation() {
+            const formData = getFormData();
+            if (!validateForm(formData)) return;
+
+            try {
+                const response = await fetch(`${API_BASE}/calculations/preview-sql`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Failed to generate SQL preview');
+                }
+
+                const result = await response.json();
+                document.getElementById('preview-code').textContent = result.sql_preview;
+                document.getElementById('preview-section').style.display = 'block';
+                
+                showAlert('SQL preview generated successfully!', 'success');
+                
+            } catch (error) {
+                console.error('Error generating SQL preview:', error);
+                showAlert('Error generating SQL preview: ' + error.message, 'error');
+            }
+        }
+
+        async function testCalculation() {
+            const formData = getFormData();
+            if (!validateForm(formData)) return;
+
+            showAlert('Testing calculation functionality would require a saved calculation. Please save first, then use the test feature.', 'success');
+        }
+
+        async function saveCalculation(event) {
+            event.preventDefault();
+            
+            const formData = getFormData();
+            if (!validateForm(formData)) return;
+
+            try {
+                const response = await fetch(`${API_BASE}/calculations`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Failed to save calculation');
+                }
+
+                const savedCalc = await response.json();
+                showAlert('Calculation saved successfully!', 'success');
+                
+                // Refresh the saved calculations list
+                await loadDropdownData();
+                
+                // Clear form
+                document.getElementById('calculationForm').reset();
+                document.getElementById('conditionalFields').style.display = 'none';
+                document.getElementById('preview-section').style.display = 'none';
+                
+            } catch (error) {
+                console.error('Error saving calculation:', error);
+                showAlert('Error saving calculation: ' + error.message, 'error');
+            }
+        }
+
+        function getFormData() {
+            const form = document.getElementById('calculationForm');
+            const formData = new FormData(form);
+            
+            return {
+                name: formData.get('calcName'),
+                description: formData.get('calcDescription'),
+                calculation_type: formData.get('calculationType'),
+                target_field: formData.get('targetField'),
+                aggregation_level: formData.get('aggregationLevel'),
+                weight_field: formData.get('weightField'),
+                denominator_field: formData.get('denominatorField'),
+                cycle_filter: formData.get('cycleFilter') ? parseInt(formData.get('cycleFilter')) : null,
+                is_public: document.getElementById('isPublic').checked
+            };
+        }
+
+        function validateForm(formData) {
+            if (!formData.name || !formData.calculation_type || !formData.target_field || !formData.aggregation_level) {
+                showAlert('Please fill in all required fields.', 'error');
+                return false;
+            }
+
+            if (formData.calculation_type === 'weighted_avg' && !formData.weight_field) {
+                showAlert('Weight field is required for weighted average calculations.', 'error');
+                return false;
+            }
+
+            if ((formData.calculation_type === 'ratio' || formData.calculation_type === 'percentage') && !formData.denominator_field) {
+                showAlert('Denominator field is required for ratio and percentage calculations.', 'error');
+                return false;
+            }
+
+            return true;
+        }
+
+        function showAlert(message, type) {
+            const container = document.getElementById('alert-container');
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.textContent = message;
+            
+            container.innerHTML = '';
+            container.appendChild(alertDiv);
+            
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
