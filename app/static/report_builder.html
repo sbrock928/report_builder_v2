@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Financial Report Builder</title>
+    <title>Report Builder</title>
     <style>
         * {
             margin: 0;
@@ -13,7 +13,7 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #2c5aa0 0%, #1a4480 100%);
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
             min-height: 100vh;
             padding: 20px;
         }
@@ -23,12 +23,12 @@
             margin: 0 auto;
             background: rgba(255, 255, 255, 0.95);
             border-radius: 16px;
-            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.1);
             overflow: hidden;
         }
 
         .header {
-            background: linear-gradient(135deg, #1a4480 0%, #2c5aa0 100%);
+            background: linear-gradient(135deg, #2E7D32 0%, #388E3C 100%);
             color: white;
             padding: 30px;
             text-align: center;
@@ -45,192 +45,169 @@
             font-size: 1.1rem;
         }
 
-        .main-content {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 0;
-            min-height: 80vh;
+        .nav-links {
+            background: #f8f9fa;
+            padding: 15px 30px;
+            border-bottom: 1px solid #e9ecef;
         }
 
-        .calculations-panel {
+        .nav-links a {
+            color: #495057;
+            text-decoration: none;
+            margin-right: 20px;
+            padding: 8px 16px;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+
+        .nav-links a:hover {
+            background-color: #e9ecef;
+        }
+
+        .nav-links a.active {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 0;
+            min-height: 70vh;
+        }
+
+        .sidebar {
             background: #f8f9fa;
             padding: 30px;
             border-right: 1px solid #e9ecef;
-            overflow-y: auto;
-            max-height: 80vh;
         }
 
-        .selected-panel {
-            background: #ffffff;
+        .report-form {
             padding: 30px;
-            border-right: 1px solid #e9ecef;
-            overflow-y: auto;
-            max-height: 80vh;
         }
 
-        .preview-panel {
-            background: #f1f3f4;
-            padding: 30px;
-            overflow-y: auto;
-            max-height: 80vh;
+        .section {
+            margin-bottom: 30px;
         }
 
-        .panel-header {
-            color: #2c3e50;
-            margin-bottom: 20px;
-            font-size: 1.3rem;
-            font-weight: 600;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #e9ecef;
-        }
-
-        .calc-item.disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            background: #f5f5f5;
-        }
-
-        .calc-item.disabled:hover {
-            border-color: #e9ecef;
-            background: #f5f5f5;
-            transform: none;
-            box-shadow: none;
-        }
-
-        .calc-item {
-            background: white;
-            padding: 15px;
-            border: 2px solid #e9ecef;
-            border-radius: 8px;
-            margin-bottom: 12px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            position: relative;
-        }
-
-        .calc-item:hover {
-            border-color: #2c5aa0;
-            background: #f8f9ff;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(44, 90, 160, 0.15);
-        }
-
-        .calc-item.selected {
-            border-color: #2c5aa0;
-            background: linear-gradient(135deg, #f0f4ff 0%, #e8f0ff 100%);
-        }
-
-        .calc-item h4 {
-            color: #2c3e50;
-            margin-bottom: 5px;
-            font-size: 1rem;
-        }
-
-        .calc-item p {
-            color: #6c757d;
-            font-size: 0.9rem;
-            margin-bottom: 8px;
-        }
-
-        .calc-meta {
-            font-size: 0.8rem;
-            color: #adb5bd;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .calc-type-badge {
-            background: #e9ecef;
-            color: #495057;
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-size: 0.75rem;
-            font-weight: 600;
-        }
-
-        .calc-type-badge.sum { background: #d4edda; color: #155724; }
-        .calc-type-badge.avg { background: #cce5ff; color: #004085; }
-        .calc-type-badge.weighted_avg { background: #fff3cd; color: #856404; }
-        .calc-type-badge.ratio { background: #f8d7da; color: #721c24; }
-        .calc-type-badge.percentage { background: #d1ecf1; color: #0c5460; }
-
-        .remove-btn {
-            background: #dc3545;
-            color: white;
-            border: none;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 0.75rem;
-            cursor: pointer;
-            position: absolute;
-            top: 10px;
-            right: 10px;
-        }
-
-        .remove-btn:hover {
-            background: #c82333;
-        }
-
-        .config-section {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .config-section h3 {
-            color: #2c3e50;
+        .section h3 {
+            color: #2E7D32;
             margin-bottom: 15px;
-            font-size: 1.1rem;
+            font-size: 1.2rem;
+            font-weight: 600;
         }
 
         .form-group {
-            margin-bottom: 15px;
+            margin-bottom: 20px;
         }
 
         .form-group label {
             display: block;
-            margin-bottom: 5px;
+            margin-bottom: 8px;
             font-weight: 600;
             color: #495057;
         }
 
         .form-control {
             width: 100%;
-            padding: 10px 12px;
+            padding: 12px 16px;
             border: 2px solid #e9ecef;
-            border-radius: 6px;
+            border-radius: 8px;
             font-size: 14px;
-            transition: border-color 0.3s ease;
+            transition: all 0.3s ease;
+            background: white;
         }
 
         .form-control:focus {
             outline: none;
-            border-color: #2c5aa0;
+            border-color: #4CAF50;
+            box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+        }
+
+        .form-control:hover {
+            border-color: #dee2e6;
+        }
+
+        select.form-control {
+            cursor: pointer;
+        }
+
+        .calculation-selector {
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 15px;
+            background: white;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .calculation-item {
+            padding: 12px;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .calculation-item:hover {
+            border-color: #4CAF50;
+            background: #f8fff8;
+        }
+
+        .calculation-item.selected {
+            border-color: #4CAF50;
+            background: #e8f5e8;
+        }
+
+        .calculation-item h5 {
+            color: #2E7D32;
+            margin-bottom: 3px;
+            font-size: 0.95rem;
+        }
+
+        .calculation-item p {
+            color: #6c757d;
+            font-size: 0.85rem;
+            margin: 0;
+        }
+
+        .calculation-meta {
+            font-size: 0.75rem;
+            color: #adb5bd;
+            margin-top: 3px;
         }
 
         .btn {
-            padding: 12px 20px;
+            padding: 12px 24px;
             border: none;
-            border-radius: 6px;
+            border-radius: 8px;
             font-size: 14px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
-            margin-right: 10px;
-            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, #2c5aa0 0%, #1a4480 100%);
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
             color: white;
         }
 
         .btn-primary:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(44, 90, 160, 0.3);
+            box-shadow: 0 10px 25px rgba(76, 175, 80, 0.3);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
         }
 
         .btn-success {
@@ -243,64 +220,67 @@
             transform: translateY(-2px);
         }
 
-        .btn-info {
-            background: #17a2b8;
+        .btn-danger {
+            background: #dc3545;
             color: white;
         }
 
-        .btn-info:hover {
-            background: #138496;
+        .btn-danger:hover {
+            background: #c82333;
             transform: translateY(-2px);
         }
 
-        .btn-warning {
-            background: #ffc107;
-            color: #212529;
-        }
-
-        .btn-warning:hover {
-            background: #e0a800;
-            transform: translateY(-2px);
-        }
-
-        .sql-preview {
-            background: #2d3748;
-            color: #e2e8f0;
-            padding: 20px;
-            border-radius: 8px;
-            font-family: 'Courier New', monospace;
-            font-size: 0.85rem;
-            overflow-x: auto;
-            white-space: pre-wrap;
-            max-height: 300px;
-            overflow-y: auto;
-        }
-
-        .results-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
+        .saved-reports {
             background: white;
             border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
         }
 
-        .results-table th {
-            background: #2c5aa0;
-            color: white;
-            padding: 12px;
-            text-align: left;
-            font-weight: 600;
+        .report-item {
+            padding: 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
         }
 
-        .results-table td {
-            padding: 10px 12px;
-            border-bottom: 1px solid #e9ecef;
+        .report-item:hover {
+            border-color: #4CAF50;
+            background: #f8fff8;
+            transform: translateY(-1px);
         }
 
-        .results-table tr:nth-child(even) {
-            background: #f8f9fa;
+        .report-item.selected {
+            border-color: #4CAF50;
+            background: #e8f5e8;
+        }
+
+        .report-item h4 {
+            color: #2E7D32;
+            margin-bottom: 5px;
+            font-size: 1rem;
+        }
+
+        .report-item p {
+            color: #6c757d;
+            font-size: 0.9rem;
+            margin: 0;
+        }
+
+        .report-meta {
+            font-size: 0.8rem;
+            color: #adb5bd;
+            margin-top: 5px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+            flex-wrap: wrap;
         }
 
         .alert {
@@ -322,60 +302,77 @@
             border: 1px solid #f5c6cb;
         }
 
-        .alert-info {
-            background: #d1ecf1;
-            color: #0c5460;
-            border: 1px solid #bee5eb;
-        }
-
-        .empty-state {
-            text-align: center;
-            color: #6c757d;
-            padding: 40px 20px;
-        }
-
-        .empty-state h3 {
-            margin-bottom: 10px;
-            color: #495057;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
-        .stat-card {
-            background: white;
-            padding: 15px;
+        .results-section {
+            background: #f8f9fa;
+            padding: 20px;
             border-radius: 8px;
-            text-align: center;
+            margin-top: 20px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
-        .stat-number {
-            font-size: 1.8rem;
+        .results-table th {
+            background: #4CAF50;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .results-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .results-table tbody tr:hover {
+            background: #f8fff8;
+        }
+
+        .selected-calculations {
+            background: #e8f5e8;
+            border: 1px solid #4CAF50;
+            border-radius: 6px;
+            padding: 10px;
+            margin-top: 10px;
+            min-height: 50px;
+        }
+
+        .selected-calc-tag {
+            display: inline-block;
+            background: #4CAF50;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            margin: 2px;
+            font-size: 0.8rem;
+        }
+
+        .selected-calc-tag .remove {
+            margin-left: 5px;
+            cursor: pointer;
             font-weight: bold;
-            color: #2c5aa0;
         }
 
-        .stat-label {
-            font-size: 0.85rem;
-            color: #6c757d;
-            margin-top: 5px;
-        }
-
-        @media (max-width: 1200px) {
+        @media (max-width: 768px) {
             .main-content {
                 grid-template-columns: 1fr;
-                gap: 20px;
             }
             
-            .calculations-panel,
-            .selected-panel,
-            .preview-panel {
-                max-height: none;
+            .header h1 {
+                font-size: 1.8rem;
+            }
+            
+            .button-group {
+                flex-direction: column;
             }
         }
     </style>
@@ -383,449 +380,538 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>📊 Financial Report Builder</h1>
-            <p>Combine saved calculations to create powerful financial reports</p>
+            <h1>Report Builder</h1>
+            <p>Create comprehensive reports using your saved calculations</p>
+        </div>
+
+        <div class="nav-links">
+            <a href="/static/calculation_ui.html">Calculation Builder</a>
+            <a href="/static/report_builder.html" class="active">Report Builder</a>
         </div>
 
         <div class="main-content">
-            <!-- Available Calculations Panel -->
-            <div class="calculations-panel">
-                <div class="panel-header">Available Calculations</div>
-                
-                <div class="config-section">
-                    <h3>Filter Calculations</h3>
-                    <div class="form-group">
-                        <label for="filterAggregation">Aggregation Level</label>
-                        <select id="filterAggregation" class="form-control" onchange="filterCalculations()">
-                            <option value="">All Levels</option>
-                            <option value="deal">Deal Level</option>
-                            <option value="tranche">Tranche Level</option>
-                        </select>
-                        <small style="color: #6c757d; font-size: 0.8rem;">
-                            💡 <strong>Deal Level:</strong> One row per deal (aggregated)<br>
-                            💡 <strong>Tranche Level:</strong> One row per tranche (detailed)
-                        </small>
-                    </div>
-                    <div class="form-group">
-                        <label for="filterType">Calculation Type</label>
-                        <select id="filterType" class="form-control" onchange="filterCalculations()">
-                            <option value="">All Types</option>
-                            <option value="sum">Sum</option>
-                            <option value="avg">Average</option>
-                            <option value="weighted_avg">Weighted Average</option>
-                            <option value="ratio">Ratio</option>
-                            <option value="percentage">Percentage</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div id="available-calculations">
-                    <!-- Populated by JavaScript -->
-                </div>
-            </div>
-
-            <!-- Selected Calculations Panel -->
-            <div class="selected-panel">
-                <div class="panel-header">Selected Calculations</div>
-                
-                <div class="config-section">
-                    <h3>Report Configuration</h3>
-                    <div class="form-group">
-                        <label for="reportName">Report Name</label>
-                        <input type="text" id="reportName" class="form-control" placeholder="Enter report name" value="Custom Financial Report">
-                    </div>
-                    <div class="form-group">
-                        <label for="baseAggregation">Base Aggregation Level</label>
-                        <select id="baseAggregation" class="form-control">
-                            <option value="deal">Deal Level</option>
-                            <option value="tranche">Tranche Level</option>
-                        </select>
-                        <small style="color: #6c757d; font-size: 0.85rem;">
-                            ℹ️ Only calculations matching this level will be available for selection
-                        </small>
-                    </div>
-                    <div class="form-group">
-                        <label for="cycleFilter">Cycle Filter (Optional)</label>
-                        <input type="number" id="cycleFilter" class="form-control" placeholder="e.g., 202412">
-                    </div>
-                </div>
-
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-number" id="selectedCount">0</div>
-                        <div class="stat-label">Selected</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-number" id="columnCount">0</div>
-                        <div class="stat-label">Columns</div>
-                    </div>
-                </div>
-
-                <div id="aggregation-info" class="alert alert-info" style="display: none;">
-                    <strong>Active Level:</strong> <span id="active-aggregation-level"></span><br>
-                    <small>All selected calculations must match this aggregation level</small>
-                </div>
-
-                <div id="selected-calculations">
-                    <div class="empty-state">
-                        <h3>No Calculations Selected</h3>
-                        <p>Click on calculations from the left panel to add them to your report</p>
+            <div class="sidebar">
+                <div class="section">
+                    <h3>Saved Reports</h3>
+                    <div class="saved-reports">
+                        <div id="saved-reports-list">
+                            <!-- Dynamically populated -->
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Preview Panel -->
-            <div class="preview-panel">
-                <div class="panel-header">Report Preview & Export</div>
-                
+            <div class="report-form">
                 <div id="alert-container"></div>
 
-                <div class="config-section">
-                    <h3>Actions</h3>
-                    <button class="btn btn-info" onclick="previewQuery()">🔍 Preview SQL</button>
-                    <button class="btn btn-primary" onclick="executeReport()">▶️ Run Report</button>
-                    <button class="btn btn-success" onclick="exportReport('csv')">📄 Export CSV</button>
-                    <button class="btn btn-warning" onclick="exportReport('excel')">📊 Export Excel</button>
-                </div>
+                <form id="reportForm">
+                    <div class="section">
+                        <h3>Report Information</h3>
+                        
+                        <div class="form-group">
+                            <label for="reportName">Report Name *</label>
+                            <input type="text" id="reportName" name="reportName" class="form-control" 
+                                   placeholder="Enter a descriptive report name" required>
+                        </div>
 
-                <div id="sql-preview-section" style="display: none;">
-                    <h3>Generated SQL Query</h3>
-                    <div id="sql-preview" class="sql-preview"></div>
-                </div>
+                        <div class="form-group">
+                            <label for="reportDescription">Description</label>
+                            <textarea id="reportDescription" name="reportDescription" class="form-control" 
+                                      rows="2" placeholder="Optional description of what this report shows"></textarea>
+                        </div>
+                    </div>
 
-                <div id="results-section" style="display: none;">
+                    <div class="section">
+                        <h3>Report Configuration</h3>
+                        
+                        <div class="form-group">
+                            <label for="aggregationLevel">Aggregation Level *</label>
+                            <select id="aggregationLevel" name="aggregationLevel" class="form-control" required>
+                                <option value="">Select aggregation level...</option>
+                                <option value="deal">Deal Level</option>
+                                <option value="tranche">Tranche Level</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Select Calculations *</label>
+                            <p style="color: #6c757d; font-size: 0.9rem; margin-bottom: 10px;">
+                                Choose the calculations to include in your report
+                            </p>
+                            <div id="calculation-selector" class="calculation-selector">
+                                <!-- Dynamically populated -->
+                            </div>
+                            <div id="selected-calculations" class="selected-calculations">
+                                <span style="color: #6c757d; font-size: 0.9rem;">Selected calculations will appear here</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <h3>Filters (Optional)</h3>
+                        
+                        <div class="form-group">
+                            <label for="cycleFilter">Cycle Filter</label>
+                            <input type="number" id="cycleFilter" name="cycleFilter" class="form-control" 
+                                   placeholder="e.g., 202412 for December 2024">
+                        </div>
+                    </div>
+
+                    <div class="button-group">
+                        <button type="button" class="btn btn-primary" onclick="executeReport()">
+                            Execute Report
+                        </button>
+                        <button type="submit" class="btn btn-success">
+                            Save Report
+                        </button>
+                        <button type="button" class="btn btn-secondary" onclick="clearForm()">
+                            Clear Form
+                        </button>
+                    </div>
+                </form>
+
+                <div id="results-section" class="results-section" style="display: none;">
                     <h3>Report Results</h3>
-                    <div id="results-container"></div>
+                    <div id="results-container">
+                        <!-- Results will be populated here -->
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // Global state
+        // API configuration
         const API_BASE = '/api';
-        let availableCalculations = [];
-        let selectedCalculations = [];
-        let lastResults = null;
+        
+        // Global data storage
+        let dropdownData = {
+            available_calculations: [],
+            aggregation_levels: [],
+            saved_reports: []
+        };
 
-        // Initialize
+        let selectedCalculationIds = [];
+
+        // Initialize the application
         document.addEventListener('DOMContentLoaded', function() {
-            loadCalculations();
+            console.log('DOM loaded, initializing report builder...');
+            loadDropdownData();
+            setupEventListeners();
         });
 
-        async function loadCalculations() {
+        async function loadDropdownData() {
             try {
-                const response = await fetch(`${API_BASE}/reports/available-calculations`);
-                if (!response.ok) throw new Error('Failed to load calculations');
+                console.log('Loading dropdown data from:', `${API_BASE}/reports/dropdown-data`);
+                const response = await fetch(`${API_BASE}/reports/dropdown-data`);
                 
-                availableCalculations = await response.json();
-                renderAvailableCalculations();
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('API response not ok:', response.status, errorText);
+                    throw new Error(`HTTP ${response.status}: ${errorText}`);
+                }
+                
+                const data = await response.json();
+                console.log('Received dropdown data:', data);
+                
+                dropdownData = data;
+                populateCalculationSelector();
+                loadSavedReports();
                 
             } catch (error) {
-                console.error('Error loading calculations:', error);
-                showAlert('Failed to load calculations. Please refresh the page.', 'error');
+                console.error('Error loading dropdown data:', error);
+                showAlert('Failed to load dropdown data: ' + error.message, 'error');
+                
+                // Provide fallback data so the UI still works
+                dropdownData = {
+                    available_calculations: [],
+                    aggregation_levels: [],
+                    saved_reports: []
+                };
             }
         }
 
-        function renderAvailableCalculations() {
-            const container = document.getElementById('available-calculations');
-            
-            if (availableCalculations.length === 0) {
-                container.innerHTML = '<div class="empty-state"><h3>No Calculations Found</h3><p>Create some calculations first using the Calculation Builder</p></div>';
+        function populateCalculationSelector() {
+            const container = document.getElementById('calculation-selector');
+            container.innerHTML = '';
+
+            if (!dropdownData.available_calculations || dropdownData.available_calculations.length === 0) {
+                container.innerHTML = '<p style="color: #6c757d; text-align: center;">No calculations available. Create calculations first.</p>';
                 return;
             }
 
-            // Get current base aggregation level
-            const baseAggregation = document.getElementById('baseAggregation').value;
-            
-            // Filter calculations based on base aggregation and other filters
-            const filtered = getFilteredCalculations();
-
-            if (filtered.length === 0) {
-                container.innerHTML = '<div class="empty-state"><h3>No Compatible Calculations</h3><p>No calculations found for the selected aggregation level and filters</p></div>';
-                return;
-            }
-
-            container.innerHTML = filtered.map(calc => {
-                const isDisabled = selectedCalculations.length > 0 && calc.aggregation_level !== baseAggregation;
-                const disabledClass = isDisabled ? ' disabled' : '';
-                const disabledAttr = isDisabled ? ' data-disabled="true"' : '';
+            dropdownData.available_calculations.forEach(calc => {
+                const calcElement = document.createElement('div');
+                calcElement.className = 'calculation-item';
+                calcElement.dataset.calcId = calc.id;
+                calcElement.onclick = () => toggleCalculationSelection(calc.id, calcElement);
                 
-                return `
-                    <div class="calc-item${disabledClass}" onclick="selectCalculation(${calc.id})"${disabledAttr}>
-                        <h4>${calc.name}</h4>
-                        <p>${calc.description || 'No description'}</p>
-                        <div class="calc-meta">
-                            <span class="calc-type-badge ${calc.calculation_type}">${calc.calculation_type}</span>
-                            <span>${calc.aggregation_level} • ${calc.target_field}</span>
-                        </div>
+                calcElement.innerHTML = `
+                    <h5>${calc.name}</h5>
+                    <p>${calc.description || 'No description'}</p>
+                    <div class="calculation-meta">
+                        ${calc.calculation_type} • ${calc.target_field} • ${calc.aggregation_level}
                     </div>
                 `;
-            }).join('');
-        }
-
-        function getFilteredCalculations() {
-            const aggFilter = document.getElementById('filterAggregation').value;
-            const typeFilter = document.getElementById('filterType').value;
-            const baseAggregation = document.getElementById('baseAggregation').value;
-            
-            return availableCalculations.filter(calc => {
-                // If calculations are already selected, only show compatible aggregation levels
-                const selectedAggregation = selectedCalculations.length > 0 ? 
-                    selectedCalculations[0].aggregation_level : baseAggregation;
                 
-                const aggMatch = !aggFilter || calc.aggregation_level === aggFilter;
-                const typeMatch = !typeFilter || calc.calculation_type === typeFilter;
-                const compatibleAgg = calc.aggregation_level === selectedAggregation;
-                
-                return aggMatch && typeMatch && compatibleAgg;
+                container.appendChild(calcElement);
             });
         }
 
-        function filterCalculations() {
-            renderAvailableCalculations();
+        function toggleCalculationSelection(calcId, element) {
+            const index = selectedCalculationIds.indexOf(calcId);
+            
+            if (index > -1) {
+                // Remove from selection
+                selectedCalculationIds.splice(index, 1);
+                element.classList.remove('selected');
+            } else {
+                // Add to selection
+                selectedCalculationIds.push(calcId);
+                element.classList.add('selected');
+            }
+            
+            updateSelectedCalculationsDisplay();
         }
 
-        function selectCalculation(calcId) {
-            const calcElement = event.currentTarget;
+        function updateSelectedCalculationsDisplay() {
+            const container = document.getElementById('selected-calculations');
             
-            // Check if the calculation is disabled
-            if (calcElement.hasAttribute('data-disabled')) {
-                const baseAggregation = document.getElementById('baseAggregation').value;
-                showAlert(`This calculation is not compatible with ${baseAggregation} level reports`, 'error');
+            if (selectedCalculationIds.length === 0) {
+                container.innerHTML = '<span style="color: #6c757d; font-size: 0.9rem;">Selected calculations will appear here</span>';
                 return;
             }
             
-            const calc = availableCalculations.find(c => c.id === calcId);
-            if (!calc) return;
-
-            // Check if already selected
-            if (selectedCalculations.find(c => c.id === calcId)) {
-                showAlert('Calculation already selected', 'error');
-                return;
-            }
-
-            // If this is the first calculation, set the base aggregation level
-            if (selectedCalculations.length === 0) {
-                document.getElementById('baseAggregation').value = calc.aggregation_level;
-                
-                // Update filter to match the selected aggregation level
-                if (!document.getElementById('filterAggregation').value) {
-                    document.getElementById('filterAggregation').value = calc.aggregation_level;
+            container.innerHTML = '';
+            selectedCalculationIds.forEach(calcId => {
+                const calc = dropdownData.available_calculations.find(c => c.id === calcId);
+                if (calc) {
+                    const tag = document.createElement('span');
+                    tag.className = 'selected-calc-tag';
+                    tag.innerHTML = `${calc.name} <span class="remove" onclick="removeCalculation(${calcId})">×</span>`;
+                    container.appendChild(tag);
                 }
-                
-                showAlert(`Base aggregation level set to: ${calc.aggregation_level}`, 'info');
-            } else {
-                // Check if the calculation matches the base aggregation level
-                const baseAggregation = document.getElementById('baseAggregation').value;
-                if (calc.aggregation_level !== baseAggregation) {
-                    showAlert(`Cannot mix ${calc.aggregation_level} and ${baseAggregation} level calculations`, 'error');
-                    return;
-                }
-            }
-
-            selectedCalculations.push(calc);
-            renderSelectedCalculations();
-            renderAvailableCalculations(); // Re-render to update disabled states
-            updateStats();
+            });
         }
 
         function removeCalculation(calcId) {
-            selectedCalculations = selectedCalculations.filter(c => c.id !== calcId);
-            
-            // If no calculations are selected, clear any aggregation level restrictions
-            if (selectedCalculations.length === 0) {
-                // Reset filter aggregation level if it was auto-set
-                document.getElementById('filterAggregation').value = '';
-                showAlert('Aggregation level restriction cleared', 'info');
-            }
-            
-            renderSelectedCalculations();
-            renderAvailableCalculations(); // Re-render to update available calculations
-            updateStats();
-        }
-
-        function renderSelectedCalculations() {
-            const container = document.getElementById('selected-calculations');
-            
-            if (selectedCalculations.length === 0) {
-                container.innerHTML = '<div class="empty-state"><h3>No Calculations Selected</h3><p>Click on calculations from the left panel to add them to your report</p></div>';
-                return;
-            }
-
-            container.innerHTML = selectedCalculations.map(calc => `
-                <div class="calc-item selected">
-                    <button class="remove-btn" onclick="removeCalculation(${calc.id})">×</button>
-                    <h4>${calc.name}</h4>
-                    <p>${calc.description || 'No description'}</p>
-                    <div class="calc-meta">
-                        <span class="calc-type-badge ${calc.calculation_type}">${calc.calculation_type}</span>
-                        <span>${calc.aggregation_level} • ${calc.target_field}</span>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function updateStats() {
-            document.getElementById('selectedCount').textContent = selectedCalculations.length;
-            
-            // Calculate total columns (base columns + calculation columns)
-            const baseColumns = document.getElementById('baseAggregation').value === 'deal' ? 4 : 6; // Estimate
-            const calcColumns = selectedCalculations.length;
-            document.getElementById('columnCount').textContent = baseColumns + calcColumns;
-            
-            // Show/hide aggregation level info
-            const aggregationInfo = document.getElementById('aggregation-info');
-            const activeAggregationLevel = document.getElementById('active-aggregation-level');
-            
-            if (selectedCalculations.length > 0) {
-                const level = selectedCalculations[0].aggregation_level;
-                activeAggregationLevel.textContent = level.charAt(0).toUpperCase() + level.slice(1) + ' Level';
-                aggregationInfo.style.display = 'block';
-            } else {
-                aggregationInfo.style.display = 'none';
-            }
-        }
-
-        async function previewQuery() {
-            if (selectedCalculations.length === 0) {
-                showAlert('Please select at least one calculation', 'error');
-                return;
-            }
-
-            try {
-                const response = await fetch(`${API_BASE}/reports/preview-sql`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        calculation_ids: selectedCalculations.map(c => c.id),
-                        base_aggregation: document.getElementById('baseAggregation').value,
-                        cycle_filter: document.getElementById('cycleFilter').value || null
-                    })
-                });
-
-                if (!response.ok) throw new Error('Failed to generate SQL preview');
-
-                const result = await response.json();
-                document.getElementById('sql-preview').textContent = result.sql_query;
-                document.getElementById('sql-preview-section').style.display = 'block';
+            const index = selectedCalculationIds.indexOf(calcId);
+            if (index > -1) {
+                selectedCalculationIds.splice(index, 1);
                 
-                showAlert('SQL preview generated successfully!', 'success');
-
-            } catch (error) {
-                console.error('Error generating SQL preview:', error);
-                showAlert('Error generating SQL preview: ' + error.message, 'error');
+                // Update UI
+                const element = document.querySelector(`[data-calc-id="${calcId}"]`);
+                if (element) {
+                    element.classList.remove('selected');
+                }
+                
+                updateSelectedCalculationsDisplay();
             }
+        }
+
+        function loadSavedReports() {
+            const container = document.getElementById('saved-reports-list');
+            container.innerHTML = '';
+
+            if (!dropdownData.saved_reports || dropdownData.saved_reports.length === 0) {
+                container.innerHTML = '<p style="color: #6c757d; text-align: center;">No saved reports found.</p>';
+                return;
+            }
+
+            dropdownData.saved_reports.forEach(report => {
+                const reportElement = document.createElement('div');
+                reportElement.className = 'report-item';
+                reportElement.onclick = () => loadReport(report);
+                
+                reportElement.innerHTML = `
+                    <h4>${report.name}</h4>
+                    <p>${report.description || 'No description'}</p>
+                    <div class="report-meta">
+                        ${report.aggregation_level} • ${report.calculation_ids.length} calculations
+                        ${report.cycle_filter ? ` • Cycle ${report.cycle_filter}` : ''}
+                    </div>
+                `;
+                
+                container.appendChild(reportElement);
+            });
+        }
+
+        function loadReport(report) {
+            // Remove previous selections
+            document.querySelectorAll('.report-item').forEach(item => item.classList.remove('selected'));
+            event.currentTarget.classList.add('selected');
+
+            // Populate form with report data
+            document.getElementById('reportName').value = report.name + ' (Copy)';
+            document.getElementById('reportDescription').value = report.description || '';
+            document.getElementById('aggregationLevel').value = report.aggregation_level;
+            document.getElementById('cycleFilter').value = report.cycle_filter || '';
+
+            // Clear and set selected calculations
+            selectedCalculationIds = [...report.calculation_ids];
+            
+            // Update UI to reflect selections
+            document.querySelectorAll('.calculation-item').forEach(item => {
+                const calcId = parseInt(item.dataset.calcId);
+                if (selectedCalculationIds.includes(calcId)) {
+                    item.classList.add('selected');
+                } else {
+                    item.classList.remove('selected');
+                }
+            });
+            
+            updateSelectedCalculationsDisplay();
+
+            showAlert('Report loaded successfully!', 'success');
+        }
+
+        function setupEventListeners() {
+            // Form submission
+            document.getElementById('reportForm').addEventListener('submit', saveReport);
+            
+            // Aggregation level change - filter calculations
+            document.getElementById('aggregationLevel').addEventListener('change', filterCalculationsByLevel);
+        }
+
+        function filterCalculationsByLevel() {
+            const selectedLevel = document.getElementById('aggregationLevel').value;
+            const calculationItems = document.querySelectorAll('.calculation-item');
+            
+            // Clear current selections when changing aggregation level
+            selectedCalculationIds = [];
+            updateSelectedCalculationsDisplay();
+            
+            calculationItems.forEach(item => {
+                item.classList.remove('selected');
+                const calcId = parseInt(item.dataset.calcId);
+                const calc = dropdownData.available_calculations.find(c => c.id === calcId);
+                
+                if (!selectedLevel || calc.aggregation_level === selectedLevel) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
         }
 
         async function executeReport() {
-            if (selectedCalculations.length === 0) {
-                showAlert('Please select at least one calculation', 'error');
-                return;
-            }
+            const formData = getFormData();
+            if (!validateForm(formData, false)) return;
 
             try {
-                showAlert('Executing report... Please wait.', 'info');
-
-                const response = await fetch(`${API_BASE}/reports/execute`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        calculation_ids: selectedCalculations.map(c => c.id),
-                        base_aggregation: document.getElementById('baseAggregation').value,
-                        cycle_filter: document.getElementById('cycleFilter').value || null,
-                        report_name: document.getElementById('reportName').value
-                    })
-                });
-
-                if (!response.ok) throw new Error('Failed to execute report');
-
-                const result = await response.json();
-                lastResults = result;
-                renderResults(result);
+                // Save the report first if it doesn't exist
+                let reportId;
                 
-                showAlert(`Report executed successfully! Found ${result.rows.length} rows.`, 'success');
+                if (formData.reportName && selectedCalculationIds.length > 0) {
+                    const saveResponse = await fetch(`${API_BASE}/reports`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            name: formData.reportName,
+                            description: formData.reportDescription,
+                            aggregation_level: formData.aggregationLevel,
+                            calculation_ids: selectedCalculationIds,
+                            cycle_filter: formData.cycleFilter
+                        })
+                    });
 
+                    if (!saveResponse.ok) {
+                        const error = await saveResponse.json();
+                        throw new Error(error.detail || 'Failed to save report for execution');
+                    }
+
+                    const savedReport = await saveResponse.json();
+                    reportId = savedReport.id;
+                } else {
+                    throw new Error('Please fill in report details before executing');
+                }
+                
+                // Execute the report
+                const cycleParam = formData.cycleFilter ? `&override_cycle_filter=${formData.cycleFilter}` : '';
+                const executeResponse = await fetch(`${API_BASE}/reports/${reportId}/execute?limit=50${cycleParam}`);
+                
+                if (!executeResponse.ok) {
+                    const error = await executeResponse.json();
+                    throw new Error(error.detail || 'Failed to execute report');
+                }
+
+                const result = await executeResponse.json();
+                displayResults(result);
+                
+                showAlert('Report executed successfully!', 'success');
+                
+                // Refresh saved reports list
+                await loadDropdownData();
+                
             } catch (error) {
                 console.error('Error executing report:', error);
                 showAlert('Error executing report: ' + error.message, 'error');
             }
         }
 
-        function renderResults(result) {
+        function displayResults(result) {
             const container = document.getElementById('results-container');
+            const section = document.getElementById('results-section');
             
-            if (!result.rows || result.rows.length === 0) {
-                container.innerHTML = '<div class="empty-state"><h3>No Data Found</h3><p>The query returned no results</p></div>';
-                document.getElementById('results-section').style.display = 'block';
+            if (!result.results || result.results.length === 0) {
+                container.innerHTML = '<p>No results found for this report configuration.</p>';
+                section.style.display = 'block';
                 return;
             }
-
-            // Create table
-            let html = '<table class="results-table"><thead><tr>';
-            result.columns.forEach(col => {
-                html += `<th>${col}</th>`;
-            });
-            html += '</tr></thead><tbody>';
-
-            // Limit to first 50 rows for display
-            const displayRows = result.rows.slice(0, 50);
-            displayRows.forEach(row => {
-                html += '<tr>';
-                row.forEach(cell => {
-                    const value = cell === null ? '' : (typeof cell === 'number' ? cell.toLocaleString() : cell);
-                    html += `<td>${value}</td>`;
-                });
-                html += '</tr>';
-            });
-
-            html += '</tbody></table>';
             
-            if (result.rows.length > 50) {
-                html += `<p style="margin-top: 15px; color: #6c757d; text-align: center;">Showing first 50 of ${result.rows.length} total rows. Export to see all data.</p>`;
-            }
-
-            container.innerHTML = html;
-            document.getElementById('results-section').style.display = 'block';
+            // Create table
+            const table = document.createElement('table');
+            table.className = 'results-table';
+            
+            // Create header
+            const thead = document.createElement('thead');
+            const headerRow = document.createElement('tr');
+            
+            result.column_names.forEach(columnName => {
+                const th = document.createElement('th');
+                th.textContent = columnName;
+                headerRow.appendChild(th);
+            });
+            
+            thead.appendChild(headerRow);
+            table.appendChild(thead);
+            
+            // Create body
+            const tbody = document.createElement('tbody');
+            
+            result.results.forEach(row => {
+                const tr = document.createElement('tr');
+                
+                result.column_names.forEach(columnName => {
+                    const td = document.createElement('td');
+                    let value = row[columnName];
+                    
+                    // Format numeric values
+                    if (typeof value === 'number') {
+                        if (Number.isInteger(value)) {
+                            value = value.toLocaleString();
+                        } else {
+                            value = value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                        }
+                    } else if (value === null || value === undefined) {
+                        value = '-';
+                    }
+                    
+                    td.textContent = value;
+                    tr.appendChild(td);
+                });
+                
+                tbody.appendChild(tr);
+            });
+            
+            table.appendChild(tbody);
+            
+            // Add summary info
+            const summary = document.createElement('div');
+            summary.style.marginBottom = '15px';
+            summary.innerHTML = `
+                <strong>Report Summary:</strong><br>
+                • ${result.result_count} records returned<br>
+                • Aggregation Level: ${result.aggregation_level}<br>
+                • Calculations Used: ${result.calculations_used.map(c => c.name).join(', ')}<br>
+                ${result.cycle_filter_used ? `• Cycle Filter: ${result.cycle_filter_used}` : ''}
+            `;
+            
+            container.innerHTML = '';
+            container.appendChild(summary);
+            container.appendChild(table);
+            section.style.display = 'block';
         }
 
-        async function exportReport(format) {
-            if (!lastResults) {
-                showAlert('Please run the report first', 'error');
-                return;
-            }
+        async function saveReport(event) {
+            event.preventDefault();
+            
+            const formData = getFormData();
+            if (!validateForm(formData, true)) return;
 
             try {
-                const response = await fetch(`${API_BASE}/reports/export/${format}`, {
+                const response = await fetch(`${API_BASE}/reports`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
                     body: JSON.stringify({
-                        calculation_ids: selectedCalculations.map(c => c.id),
-                        base_aggregation: document.getElementById('baseAggregation').value,
-                        cycle_filter: document.getElementById('cycleFilter').value || null,
-                        report_name: document.getElementById('reportName').value
+                        name: formData.reportName,
+                        description: formData.reportDescription,
+                        aggregation_level: formData.aggregationLevel,
+                        calculation_ids: selectedCalculationIds,
+                        cycle_filter: formData.cycleFilter
                     })
                 });
 
-                if (!response.ok) throw new Error('Failed to export report');
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Failed to save report');
+                }
 
-                // Download the file
-                const blob = await response.blob();
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `${document.getElementById('reportName').value}.${format}`;
-                document.body.appendChild(a);
-                a.click();
-                window.URL.revokeObjectURL(url);
-                document.body.removeChild(a);
-
-                showAlert(`Report exported as ${format.toUpperCase()} successfully!`, 'success');
-
+                const savedReport = await response.json();
+                showAlert('Report saved successfully!', 'success');
+                
+                // Refresh the saved reports list
+                await loadDropdownData();
+                
+                // Clear form
+                clearForm();
+                
             } catch (error) {
-                console.error('Error exporting report:', error);
-                showAlert('Error exporting report: ' + error.message, 'error');
+                console.error('Error saving report:', error);
+                showAlert('Error saving report: ' + error.message, 'error');
             }
+        }
+
+        function clearForm() {
+            document.getElementById('reportForm').reset();
+            selectedCalculationIds = [];
+            
+            document.querySelectorAll('.calculation-item').forEach(item => {
+                item.classList.remove('selected');
+                item.style.display = 'block';
+            });
+            
+            document.querySelectorAll('.report-item').forEach(item => item.classList.remove('selected'));
+            
+            updateSelectedCalculationsDisplay();
+            document.getElementById('results-section').style.display = 'none';
+            
+            showAlert('Form cleared successfully!', 'success');
+        }
+
+        function getFormData() {
+            const form = document.getElementById('reportForm');
+            const formData = new FormData(form);
+            
+            return {
+                reportName: formData.get('reportName'),
+                reportDescription: formData.get('reportDescription'),
+                aggregationLevel: formData.get('aggregationLevel'),
+                cycleFilter: formData.get('cycleFilter') ? parseInt(formData.get('cycleFilter')) : null
+            };
+        }
+
+        function validateForm(formData, requireName = true) {
+            if (requireName && !formData.reportName) {
+                showAlert('Please enter a report name.', 'error');
+                return false;
+            }
+
+            if (!formData.aggregationLevel) {
+                showAlert('Please select an aggregation level.', 'error');
+                return false;
+            }
+
+            if (selectedCalculationIds.length === 0) {
+                showAlert('Please select at least one calculation.', 'error');
+                return false;
+            }
+
+            return true;
         }
 
         function showAlert(message, type) {
@@ -842,20 +928,20 @@
             }, 5000);
         }
 
-        // Update stats when base aggregation changes
-        document.getElementById('baseAggregation').addEventListener('change', function() {
-            // If calculations are selected, prevent changing base aggregation
-            if (selectedCalculations.length > 0) {
-                const currentAggregation = selectedCalculations[0].aggregation_level;
-                document.getElementById('baseAggregation').value = currentAggregation;
-                showAlert('Cannot change base aggregation level while calculations are selected. Remove all calculations first.', 'error');
-                return;
+        // Debug function to test API connectivity
+        async function testAPI() {
+            console.log('Testing API connectivity...');
+            try {
+                const response = await fetch('/health');
+                const result = await response.json();
+                console.log('Health check result:', result);
+            } catch (error) {
+                console.error('Health check failed:', error);
             }
-            
-            // Re-render available calculations with new base aggregation
-            renderAvailableCalculations();
-            updateStats();
-        });
+        }
+
+        // Call test API on load
+        testAPI();
     </script>
 </body>
 </html>
