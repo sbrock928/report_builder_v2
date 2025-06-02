@@ -34,9 +34,7 @@ def demo_calculation_creation():
     saved_calc1 = repo.save_calculation(
         config=deal_total_config,
         name="Deal Total Principal Distribution (Dec 2024)",
-        description="Sum of all principal distributions by deal for December 2024",
-        created_by="demo_user",
-        is_public=True
+        description="Sum of all principal distributions by deal for December 2024"
     )
     
     print(f"✓ Created: {saved_calc1.name}")
@@ -54,9 +52,7 @@ def demo_calculation_creation():
     saved_calc2 = repo.save_calculation(
         config=weighted_avg_config,
         name="Weighted Average Pass-Through Rate (Dec 2024)",
-        description="Balance-weighted average pass-through rate by deal",
-        created_by="demo_user",
-        is_public=False
+        description="Balance-weighted average pass-through rate by deal"
     )
     
     print(f"✓ Created: {saved_calc2.name}")
@@ -74,9 +70,7 @@ def demo_calculation_creation():
     saved_calc3 = repo.save_calculation(
         config=percentage_config,
         name="Principal Distribution as % of Balance",
-        description="Principal distribution as percentage of ending balance",
-        created_by="demo_user",
-        is_public=True
+        description="Principal distribution as percentage of ending balance"
     )
     
     print(f"✓ Created: {saved_calc3.name}")
@@ -98,7 +92,7 @@ def demo_query_execution():
     manager = CalculationManager(dw_session)
     
     # Get saved calculations
-    saved_calcs = repo.get_user_calculations("demo_user")
+    saved_calcs = repo.get_all_calculations()
     
     if not saved_calcs:
         print("❌ No saved calculations found. Run demo_calculation_creation() first.")
@@ -201,10 +195,10 @@ def demo_subquery_generation():
     
     dw_session.close()
 
-def demo_search_and_templates():
-    """Demonstrate search and template functionality."""
+def demo_search():
+    """Demonstrate search functionality."""
     
-    print("\n🔍 Demo: Search and Templates")
+    print("\n🔍 Demo: Search Functionality")
     print("=" * 50)
     
     session = SessionLocal()
@@ -212,20 +206,19 @@ def demo_search_and_templates():
     
     # Search calculations
     print("Searching for 'principal' calculations:")
-    search_results = repo.search_calculations("principal", "demo_user")
+    search_results = repo.search_calculations("principal")
     for result in search_results:
         print(f"  • {result.name} ({result.calculation_type})")
     
     print(f"\nFound {len(search_results)} matching calculations")
     
-    # Get templates
-    print("\nAvailable calculation templates:")
-    templates = repo.get_calculation_templates()
-    for template in templates:
-        print(f"  • {template.name} ({template.category})")
-        print(f"    {template.description}")
+    # Get all calculations
+    print("\nAll saved calculations:")
+    all_calcs = repo.get_all_calculations()
+    for calc in all_calcs:
+        print(f"  • {calc.name} ({calc.calculation_type})")
     
-    print(f"\nFound {len(templates)} templates")
+    print(f"\nFound {len(all_calcs)} total calculations")
     
     session.close()
 
@@ -242,8 +235,7 @@ def demo_api_simulation():
         "calculation_type": "sum",
         "target_field": "interest_distribution",
         "aggregation_level": "deal",
-        "cycle_filter": 202412,
-        "is_public": False
+        "cycle_filter": 202412
     }
     
     print("Simulated API Request:")
@@ -265,9 +257,7 @@ def demo_api_simulation():
         saved_calc = repo.save_calculation(
             config=config,
             name=api_request["name"],
-            description=api_request["description"],
-            created_by="api_user",
-            is_public=api_request["is_public"]
+            description=api_request["description"]
         )
         
         print(f"\n✓ API calculation created: {saved_calc.name} (ID: {saved_calc.id})")
@@ -324,7 +314,7 @@ def main():
         demo_calculation_creation()
         demo_subquery_generation()
         demo_query_execution()
-        demo_search_and_templates()
+        demo_search()
         demo_api_simulation()
         
         print("\n✅ Demo completed successfully!")

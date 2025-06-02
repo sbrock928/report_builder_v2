@@ -1,11 +1,10 @@
 """Database models for persisting user-defined calculations."""
 
-from sqlalchemy import Column, Integer, String, Text, DateTime, Boolean, JSON, ForeignKey
-from sqlalchemy.orm import relationship, Mapped, mapped_column
+from sqlalchemy import Column, Integer, String, Text, DateTime, Boolean, JSON
+from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql import func
 from app.core.database import Base
 from typing import Optional, Dict, Any
-import json
 from datetime import datetime
 from pydantic import BaseModel
 
@@ -17,7 +16,7 @@ class SavedCalculation(Base):
     name: Mapped[str] = mapped_column(String(100), nullable=False)
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     
-    # Calculation configuration stored as JSON
+    # Calculation configuration
     calculation_type: Mapped[str] = mapped_column(String(50), nullable=False)  # 'sum', 'avg', etc.
     target_field: Mapped[str] = mapped_column(String(50), nullable=False)
     aggregation_level: Mapped[str] = mapped_column(String(20), nullable=False)  # 'deal' or 'tranche'
@@ -31,13 +30,9 @@ class SavedCalculation(Base):
     filters: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
     
     # Metadata
-    created_by: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)  # User ID or name
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
-    
-    # Make this calculation available to all users or just the creator
-    is_public: Mapped[bool] = mapped_column(Boolean, default=False)
     
     def to_calculation_config(self):
         """Convert database record to CalculationConfig object."""
@@ -55,8 +50,7 @@ class SavedCalculation(Base):
         )
     
     @classmethod
-    def from_calculation_config(cls, config, name: str, description: str = None, 
-                              created_by: str = None, is_public: bool = False):
+    def from_calculation_config(cls, config, name: str, description: str = None):
         """Create database record from CalculationConfig object."""
         return cls(
             name=name,
@@ -67,32 +61,8 @@ class SavedCalculation(Base):
             weight_field=config.weight_field,
             denominator_field=config.denominator_field,
             cycle_filter=config.cycle_filter,
-            filters=config.filters,
-            created_by=created_by,
-            is_public=is_public
+            filters=config.filters
         )
-
-class CalculationTemplate(Base):
-    """Pre-defined calculation templates for common use cases."""
-    __tablename__ = "calculation_templates"
-    
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    name: Mapped[str] = mapped_column(String(100), nullable=False)
-    description: Mapped[str] = mapped_column(Text, nullable=False)
-    category: Mapped[str] = mapped_column(String(50), nullable=False)  # 'cashflow', 'performance', etc.
-    
-    # Same config fields as SavedCalculation
-    calculation_type: Mapped[str] = mapped_column(String(50), nullable=False)
-    target_field: Mapped[str] = mapped_column(String(50), nullable=False)
-    aggregation_level: Mapped[str] = mapped_column(String(20), nullable=False)
-    weight_field: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
-    denominator_field: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
-    
-    # Templates don't have cycle filters by default
-    default_filters: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
-    
-    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
-    sort_order: Mapped[int] = mapped_column(Integer, default=0)
 
 class CalculationRepository:
     """Repository for managing saved calculations."""
@@ -100,11 +70,10 @@ class CalculationRepository:
     def __init__(self, session):
         self.session = session
     
-    def save_calculation(self, config, name: str, description: str = None, 
-                        created_by: str = None, is_public: bool = False):
+    def save_calculation(self, config, name: str, description: str = None):
         """Save a calculation configuration."""
         saved_calc = SavedCalculation.from_calculation_config(
-            config, name, description, created_by, is_public
+            config, name, description
         )
         self.session.add(saved_calc)
         self.session.commit()
@@ -117,28 +86,11 @@ class CalculationRepository:
             SavedCalculation.is_active == True
         ).first()
     
-    def get_user_calculations(self, user_id: str):
-        """Get all calculations for a specific user."""
+    def get_all_calculations(self):
+        """Get all active calculations."""
         return self.session.query(SavedCalculation).filter(
-            SavedCalculation.created_by == user_id,
             SavedCalculation.is_active == True
         ).order_by(SavedCalculation.name).all()
-    
-    def get_public_calculations(self):
-        """Get all public calculations."""
-        return self.session.query(SavedCalculation).filter(
-            SavedCalculation.is_public == True,
-            SavedCalculation.is_active == True
-        ).order_by(SavedCalculation.name).all()
-    
-    def get_calculation_templates(self, category: str = None):
-        """Get calculation templates, optionally filtered by category."""
-        query = self.session.query(CalculationTemplate).filter(
-            CalculationTemplate.is_active == True
-        )
-        if category:
-            query = query.filter(CalculationTemplate.category == category)
-        return query.order_by(CalculationTemplate.sort_order, CalculationTemplate.name).all()
     
     def update_calculation(self, calc_id: int, **updates):
         """Update a saved calculation."""
@@ -159,7 +111,7 @@ class CalculationRepository:
             self.session.commit()
         return calc
     
-    def search_calculations(self, search_term: str, user_id: str = None):
+    def search_calculations(self, search_term: str):
         """Search calculations by name or description."""
         query = self.session.query(SavedCalculation).filter(
             SavedCalculation.is_active == True
@@ -171,16 +123,6 @@ class CalculationRepository:
             search_filter = search_filter | SavedCalculation.description.ilike(f'%{search_term}%')
         
         query = query.filter(search_filter)
-        
-        # Filter by user's calculations or public ones
-        if user_id:
-            query = query.filter(
-                (SavedCalculation.created_by == user_id) |
-                (SavedCalculation.is_public == True)
-            )
-        else:
-            query = query.filter(SavedCalculation.is_public == True)
-        
         return query.order_by(SavedCalculation.name).all()
 
 # API Models for FastAPI
@@ -195,7 +137,6 @@ class CalculationConfigRequest(BaseModel):
     denominator_field: Optional[str] = None
     cycle_filter: Optional[int] = None
     filters: Optional[Dict[str, Any]] = None
-    is_public: bool = False
 
 class CalculationConfigResponse(BaseModel):
     """Response model for calculation data."""
@@ -209,10 +150,8 @@ class CalculationConfigResponse(BaseModel):
     denominator_field: Optional[str]
     cycle_filter: Optional[int]
     filters: Optional[Dict[str, Any]]
-    created_by: Optional[str]
     created_at: datetime
     updated_at: datetime
-    is_public: bool
 
 class DropdownOption(BaseModel):
     """Model for dropdown options."""
@@ -226,4 +165,3 @@ class DropdownData(BaseModel):
     target_fields: list[DropdownOption]
     aggregation_levels: list[DropdownOption]
     saved_calculations: list[CalculationConfigResponse]
-    templates: list[CalculationConfigResponse]

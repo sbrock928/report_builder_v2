@@ -245,33 +245,9 @@
             font-size: 0.9rem;
             overflow-x: auto;
             white-space: pre-wrap;
-        }
-
-        .tabs {
-            display: flex;
-            border-bottom: 2px solid #e9ecef;
-            margin-bottom: 20px;
-        }
-
-        .tab {
-            padding: 12px 24px;
-            cursor: pointer;
-            border-bottom: 2px solid transparent;
-            transition: all 0.3s ease;
-            font-weight: 600;
-        }
-
-        .tab.active {
-            border-bottom-color: #667eea;
-            color: #667eea;
-        }
-
-        .tab-content {
-            display: none;
-        }
-
-        .tab-content.active {
-            display: block;
+            max-height: 400px;
+            overflow-y: auto;
+            line-height: 1.4;
         }
 
         @media (max-width: 768px) {
@@ -298,29 +274,11 @@
 
         <div class="main-content">
             <div class="sidebar">
-                <div class="tabs">
-                    <div class="tab active" onclick="switchTab('saved')">Saved</div>
-                    <div class="tab" onclick="switchTab('templates')">Templates</div>
-                </div>
-
-                <div id="saved-tab" class="tab-content active">
-                    <div class="section">
-                        <h3>Saved Calculations</h3>
-                        <div class="saved-calculations">
-                            <div id="saved-calculations-list">
-                                <!-- Dynamically populated -->
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="templates-tab" class="tab-content">
-                    <div class="section">
-                        <h3>Calculation Templates</h3>
-                        <div class="saved-calculations">
-                            <div id="templates-list">
-                                <!-- Dynamically populated -->
-                            </div>
+                <div class="section">
+                    <h3>Saved Calculations</h3>
+                    <div class="saved-calculations">
+                        <div id="saved-calculations-list">
+                            <!-- Dynamically populated -->
                         </div>
                     </div>
                 </div>
@@ -387,17 +345,6 @@
                         </div>
                     </div>
 
-                    <div class="section">
-                        <h3>Save Options</h3>
-                        
-                        <div class="form-group">
-                            <label>
-                                <input type="checkbox" id="isPublic" name="isPublic"> 
-                                Make this calculation available to all users
-                            </label>
-                        </div>
-                    </div>
-
                     <div class="button-group">
                         <button type="button" class="btn btn-secondary" onclick="previewCalculation()">
                             Preview SQL
@@ -408,11 +355,14 @@
                         <button type="submit" class="btn btn-success">
                             Save Calculation
                         </button>
+                        <button type="button" class="btn btn-secondary" onclick="clearForm()">
+                            Clear Form
+                        </button>
                     </div>
                 </form>
 
                 <div id="preview-section" class="preview-section" style="display: none;">
-                    <h3>Generated SQL Preview</h3>
+                    <h3>Test Results</h3>
                     <div id="preview-code" class="preview-code"></div>
                 </div>
             </div>
@@ -425,42 +375,54 @@
         
         // Global data storage
         let dropdownData = {
-            calculationTypes: [],
-            targetFields: [],
-            aggregationLevels: [],
-            savedCalculations: [],
-            templates: []
+            calculation_types: [],
+            target_fields: [],
+            aggregation_levels: [],
+            saved_calculations: []
         };
 
         // Initialize the application
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded, initializing application...');
             loadDropdownData();
             setupEventListeners();
         });
 
         async function loadDropdownData() {
             try {
+                console.log('Loading dropdown data from:', `${API_BASE}/calculations/dropdown-data`);
                 const response = await fetch(`${API_BASE}/calculations/dropdown-data`);
-                if (!response.ok) throw new Error('Failed to load dropdown data');
                 
-                const apiData = await response.json();
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('API response not ok:', response.status, errorText);
+                    throw new Error(`HTTP ${response.status}: ${errorText}`);
+                }
                 
-                // Map snake_case API fields to camelCase JS fields
-                dropdownData = {
-                    calculationTypes: apiData.calculation_types,
-                    targetFields: apiData.target_fields,
-                    aggregationLevels: apiData.aggregation_levels,
-                    savedCalculations: apiData.saved_calculations,
-                    templates: apiData.templates
-                };
+                const data = await response.json();
+                console.log('Received dropdown data:', data);
                 
+                // Validate the data structure
+                if (!data.calculation_types || !data.target_fields || !data.aggregation_levels) {
+                    throw new Error('Invalid data structure received from API');
+                }
+                
+                dropdownData = data;
                 populateDropdowns();
                 loadSavedCalculations();
-                loadTemplates();
                 
             } catch (error) {
                 console.error('Error loading dropdown data:', error);
-                showAlert('Failed to load dropdown data. Please refresh the page.', 'error');
+                showAlert('Failed to load dropdown data: ' + error.message, 'error');
+                
+                // Provide fallback data so the UI still works
+                dropdownData = {
+                    calculation_types: [],
+                    target_fields: [],
+                    aggregation_levels: [],
+                    saved_calculations: []
+                };
+                populateDropdowns();
             }
         }
 
@@ -468,76 +430,55 @@
             // Populate calculation types
             const calcTypeSelect = document.getElementById('calculationType');
             calcTypeSelect.innerHTML = '<option value="">Select calculation type...</option>';
-            dropdownData.calculationTypes.forEach(option => {
-                const optionElement = document.createElement('option');
-                optionElement.value = option.value;
-                optionElement.textContent = option.label;
-                optionElement.title = option.description;
-                calcTypeSelect.appendChild(optionElement);
-            });
+            
+            if (dropdownData.calculation_types && Array.isArray(dropdownData.calculation_types)) {
+                dropdownData.calculation_types.forEach(option => {
+                    const optionElement = document.createElement('option');
+                    optionElement.value = option.value;
+                    optionElement.textContent = option.label;
+                    optionElement.title = option.description || '';
+                    calcTypeSelect.appendChild(optionElement);
+                });
+            }
 
             // Populate target fields
             const targetFieldSelect = document.getElementById('targetField');
             targetFieldSelect.innerHTML = '<option value="">Select field to calculate on...</option>';
-            dropdownData.targetFields.forEach(option => {
-                const optionElement = document.createElement('option');
-                optionElement.value = option.value;
-                optionElement.textContent = option.label;
-                optionElement.title = option.description;
-                targetFieldSelect.appendChild(optionElement);
-            });
+            
+            if (dropdownData.target_fields && Array.isArray(dropdownData.target_fields)) {
+                dropdownData.target_fields.forEach(option => {
+                    const optionElement = document.createElement('option');
+                    optionElement.value = option.value;
+                    optionElement.textContent = option.label;
+                    optionElement.title = option.description || '';
+                    targetFieldSelect.appendChild(optionElement);
+                });
+            }
         }
 
         function loadSavedCalculations() {
             const container = document.getElementById('saved-calculations-list');
             container.innerHTML = '';
 
-            if (dropdownData.savedCalculations.length === 0) {
+            if (!dropdownData.saved_calculations || !Array.isArray(dropdownData.saved_calculations) || dropdownData.saved_calculations.length === 0) {
                 container.innerHTML = '<p style="color: #6c757d; text-align: center;">No saved calculations found.</p>';
                 return;
             }
 
-            dropdownData.savedCalculations.forEach(calc => {
+            dropdownData.saved_calculations.forEach(calc => {
                 const calcElement = document.createElement('div');
                 calcElement.className = 'calc-item';
                 calcElement.onclick = () => loadCalculation(calc);
                 
                 calcElement.innerHTML = `
-                    <h4>${calc.name}</h4>
+                    <h4>${calc.name || 'Unnamed Calculation'}</h4>
                     <p>${calc.description || 'No description'}</p>
                     <div class="calc-meta">
-                        ${calc.calculation_type} • ${calc.target_field} • ${calc.aggregation_level}
-                        ${calc.is_public ? ' • Public' : ' • Private'}
+                        ${calc.calculation_type || ''} • ${calc.target_field || ''} • ${calc.aggregation_level || ''}
                     </div>
                 `;
                 
                 container.appendChild(calcElement);
-            });
-        }
-
-        function loadTemplates() {
-            const container = document.getElementById('templates-list');
-            container.innerHTML = '';
-
-            if (dropdownData.templates.length === 0) {
-                container.innerHTML = '<p style="color: #6c757d; text-align: center;">No templates found.</p>';
-                return;
-            }
-
-            dropdownData.templates.forEach(template => {
-                const templateElement = document.createElement('div');
-                templateElement.className = 'calc-item';
-                templateElement.onclick = () => loadTemplate(template);
-                
-                templateElement.innerHTML = `
-                    <h4>${template.name}</h4>
-                    <p>${template.description}</p>
-                    <div class="calc-meta">
-                        ${template.calculation_type} • ${template.target_field} • ${template.aggregation_level}
-                    </div>
-                `;
-                
-                container.appendChild(templateElement);
             });
         }
 
@@ -549,16 +490,6 @@
             document.getElementById('calculationType').addEventListener('change', updateConditionalFields);
         }
 
-        function switchTab(tabName) {
-            // Update tab buttons
-            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
-            document.querySelector(`.tab:nth-child(${tabName === 'saved' ? '1' : '2'})`).classList.add('active');
-            
-            // Update tab content
-            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-            document.getElementById(`${tabName}-tab`).classList.add('active');
-        }
-
         function updateConditionalFields() {
             const calcType = document.getElementById('calculationType').value;
             const container = document.getElementById('conditionalFields');
@@ -568,27 +499,35 @@
 
             if (calcType === 'weighted_avg') {
                 container.style.display = 'block';
+                const targetFieldOptions = dropdownData.target_fields && Array.isArray(dropdownData.target_fields) 
+                    ? dropdownData.target_fields.map(field => 
+                        `<option value="${field.value}">${field.label}</option>`
+                    ).join('')
+                    : '';
+                    
                 container.innerHTML = `
                     <div class="form-group">
                         <label for="weightField">Weight Field *</label>
                         <select id="weightField" name="weightField" class="form-control" required>
                             <option value="">Select weight field...</option>
-                            ${dropdownData.targetFields.map(field => 
-                                `<option value="${field.value}">${field.label}</option>`
-                            ).join('')}
+                            ${targetFieldOptions}
                         </select>
                     </div>
                 `;
             } else if (calcType === 'ratio' || calcType === 'percentage') {
                 container.style.display = 'block';
+                const targetFieldOptions = dropdownData.target_fields && Array.isArray(dropdownData.target_fields)
+                    ? dropdownData.target_fields.map(field => 
+                        `<option value="${field.value}">${field.label}</option>`
+                    ).join('')
+                    : '';
+                    
                 container.innerHTML = `
                     <div class="form-group">
                         <label for="denominatorField">Denominator Field *</label>
                         <select id="denominatorField" name="denominatorField" class="form-control" required>
                             <option value="">Select denominator field...</option>
-                            ${dropdownData.targetFields.map(field => 
-                                `<option value="${field.value}">${field.label}</option>`
-                            ).join('')}
+                            ${targetFieldOptions}
                         </select>
                     </div>
                 `;
@@ -607,7 +546,6 @@
             document.getElementById('targetField').value = calc.target_field;
             document.getElementById('aggregationLevel').value = calc.aggregation_level;
             document.getElementById('cycleFilter').value = calc.cycle_filter || '';
-            document.getElementById('isPublic').checked = calc.is_public || false;
 
             // Update conditional fields
             updateConditionalFields();
@@ -623,10 +561,6 @@
             }, 100);
 
             showAlert('Calculation loaded successfully!', 'success');
-        }
-
-        function loadTemplate(template) {
-            loadCalculation(template);
         }
 
         async function previewCalculation() {
@@ -648,8 +582,13 @@
                 }
 
                 const result = await response.json();
+                
+                // Display the SQL preview
                 document.getElementById('preview-code').textContent = result.sql_preview;
                 document.getElementById('preview-section').style.display = 'block';
+                
+                // Update the section title to indicate it's SQL preview
+                document.querySelector('#preview-section h3').textContent = 'Generated SQL Preview';
                 
                 showAlert('SQL preview generated successfully!', 'success');
                 
@@ -663,7 +602,52 @@
             const formData = getFormData();
             if (!validateForm(formData)) return;
 
-            showAlert('Testing calculation functionality would require a saved calculation. Please save first, then use the test feature.', 'success');
+            // For testing, we need to save the calculation first, then test it
+            try {
+                // Save temporarily
+                const response = await fetch(`${API_BASE}/calculations`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Failed to save calculation for testing');
+                }
+
+                const savedCalc = await response.json();
+                
+                // Now test it
+                const testResponse = await fetch(`${API_BASE}/calculations/${savedCalc.id}/test?limit=5`);
+                
+                if (!testResponse.ok) {
+                    const error = await testResponse.json();
+                    throw new Error(error.detail || 'Failed to test calculation');
+                }
+
+                const testResult = await testResponse.json();
+                
+                // Display results
+                document.getElementById('preview-code').textContent = 
+                    `Test Results (${testResult.result_count} records):\n\n` +
+                    JSON.stringify(testResult.sample_results, null, 2);
+                document.getElementById('preview-section').style.display = 'block';
+                
+                // Update the section title to indicate it's test results
+                document.querySelector('#preview-section h3').textContent = 'Test Results';
+                
+                showAlert('Calculation tested successfully!', 'success');
+                
+                // Refresh saved calculations list
+                await loadDropdownData();
+                
+            } catch (error) {
+                console.error('Error testing calculation:', error);
+                showAlert('Error testing calculation: ' + error.message, 'error');
+            }
         }
 
         async function saveCalculation(event) {
@@ -693,14 +677,20 @@
                 await loadDropdownData();
                 
                 // Clear form
-                document.getElementById('calculationForm').reset();
-                document.getElementById('conditionalFields').style.display = 'none';
-                document.getElementById('preview-section').style.display = 'none';
+                clearForm();
                 
             } catch (error) {
                 console.error('Error saving calculation:', error);
                 showAlert('Error saving calculation: ' + error.message, 'error');
             }
+        }
+
+        function clearForm() {
+            document.getElementById('calculationForm').reset();
+            document.getElementById('conditionalFields').style.display = 'none';
+            document.getElementById('preview-section').style.display = 'none';
+            document.querySelectorAll('.calc-item').forEach(item => item.classList.remove('selected'));
+            showAlert('Form cleared successfully!', 'success');
         }
 
         function getFormData() {
@@ -715,8 +705,7 @@
                 aggregation_level: formData.get('aggregationLevel'),
                 weight_field: formData.get('weightField'),
                 denominator_field: formData.get('denominatorField'),
-                cycle_filter: formData.get('cycleFilter') ? parseInt(formData.get('cycleFilter')) : null,
-                is_public: document.getElementById('isPublic').checked
+                cycle_filter: formData.get('cycleFilter') ? parseInt(formData.get('cycleFilter')) : null
             };
         }
 
@@ -752,6 +741,21 @@
                 alertDiv.remove();
             }, 5000);
         }
+
+        // Debug function to test API connectivity
+        async function testAPI() {
+            console.log('Testing API connectivity...');
+            try {
+                const response = await fetch('/health');
+                const result = await response.json();
+                console.log('Health check result:', result);
+            } catch (error) {
+                console.error('Health check failed:', error);
+            }
+        }
+
+        // Call test API on load
+        testAPI();
     </script>
 </body>
 </html>

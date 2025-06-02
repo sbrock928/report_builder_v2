@@ -1,88 +1,9 @@
 """Database setup script to create tables and seed initial data."""
 
-from app.core.database import create_tables, create_dw_tables, SessionLocal, DWSessionLocal
-from app.models.calculations import CalculationTemplate
+from app.core.database import create_tables, create_dw_tables, DWSessionLocal
 from app.models.dwh_models import Deal, Tranche, TrancheBal
 import random
 from datetime import datetime
-
-def seed_calculation_templates():
-    """Seed the database with common calculation templates."""
-    session = SessionLocal()
-    
-    templates = [
-        CalculationTemplate(
-            name="Total Principal Distribution",
-            description="Sum of all principal distributions at deal level",
-            category="cashflow",
-            calculation_type="sum",
-            target_field="principal_distribution",
-            aggregation_level="deal",
-            sort_order=1
-        ),
-        CalculationTemplate(
-            name="Weighted Average Pass-Through Rate",
-            description="Balance-weighted average pass-through rate",
-            category="performance",
-            calculation_type="weighted_avg",
-            target_field="pass_through_rate",
-            weight_field="ending_balance",
-            aggregation_level="deal",
-            sort_order=2
-        ),
-        CalculationTemplate(
-            name="Interest Coverage Ratio",
-            description="Ratio of interest accrual to interest distribution",
-            category="performance",
-            calculation_type="ratio",
-            target_field="interest_accrual",
-            denominator_field="interest_distribution",
-            aggregation_level="tranche",
-            sort_order=3
-        ),
-        CalculationTemplate(
-            name="Principal Paydown Rate",
-            description="Principal distribution as percentage of ending balance",
-            category="performance",
-            calculation_type="percentage",
-            target_field="principal_distribution",
-            denominator_field="ending_balance",
-            aggregation_level="tranche",
-            sort_order=4
-        ),
-        CalculationTemplate(
-            name="Deal Total Interest Distribution",
-            description="Sum of all interest distributions at deal level",
-            category="cashflow",
-            calculation_type="sum",
-            target_field="interest_distribution",
-            aggregation_level="deal",
-            sort_order=5
-        ),
-        CalculationTemplate(
-            name="Deal Total Ending Balance",
-            description="Sum of ending balances across all tranches",
-            category="performance",
-            calculation_type="sum",
-            target_field="ending_balance",
-            aggregation_level="deal",
-            sort_order=6
-        )
-    ]
-    
-    for template in templates:
-        existing = session.query(CalculationTemplate).filter(
-            CalculationTemplate.name == template.name
-        ).first()
-        if not existing:
-            session.add(template)
-            print(f"✓ Added template: {template.name}")
-        else:
-            print(f"- Template already exists: {template.name}")
-    
-    session.commit()
-    session.close()
-    print(f"✓ Seeded {len(templates)} calculation templates")
 
 def seed_sample_dw_data():
     """Seed sample data warehouse data for testing."""
@@ -141,7 +62,6 @@ def seed_sample_dw_data():
             tranche_bal = TrancheBal(
                 dl_nbr=tranche.dl_nbr,
                 tr_id=tranche.tr_id,
-                tr_cusip_id=tranche.tr_cusip_id,  # THIS WAS MISSING!
                 cycle_cde=cycle,
                 tr_end_bal_amt=base_balance,
                 tr_prin_rel_ls_amt=random.uniform(0, base_balance * 0.01),  # 0-1% loss
@@ -173,10 +93,6 @@ def main():
     print("🏪 Creating data warehouse tables...")
     create_dw_tables()
     print("✓ Data warehouse tables created")
-    
-    # Seed calculation templates
-    print("🌱 Seeding calculation templates...")
-    seed_calculation_templates()
     
     # Seed sample data warehouse data
     print("🌱 Seeding sample data warehouse data...")
