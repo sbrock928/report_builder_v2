@@ -443,7 +443,17 @@
                 const response = await fetch(`${API_BASE}/calculations/dropdown-data`);
                 if (!response.ok) throw new Error('Failed to load dropdown data');
                 
-                dropdownData = await response.json();
+                const apiData = await response.json();
+                
+                // Map snake_case API fields to camelCase JS fields
+                dropdownData = {
+                    calculationTypes: apiData.calculation_types,
+                    targetFields: apiData.target_fields,
+                    aggregationLevels: apiData.aggregation_levels,
+                    savedCalculations: apiData.saved_calculations,
+                    templates: apiData.templates
+                };
+                
                 populateDropdowns();
                 loadSavedCalculations();
                 loadTemplates();

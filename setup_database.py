@@ -141,6 +141,7 @@ def seed_sample_dw_data():
             tranche_bal = TrancheBal(
                 dl_nbr=tranche.dl_nbr,
                 tr_id=tranche.tr_id,
+                tr_cusip_id=tranche.tr_cusip_id,  # THIS WAS MISSING!
                 cycle_cde=cycle,
                 tr_end_bal_amt=base_balance,
                 tr_prin_rel_ls_amt=random.uniform(0, base_balance * 0.01),  # 0-1% loss

@@ -45,9 +45,12 @@ class TrancheBal(Base):
     
     dl_nbr: Mapped[int] = mapped_column(ForeignKey("tranche.dl_nbr"), primary_key=True)
     tr_id: Mapped[str] = mapped_column(String(15), ForeignKey("tranche.tr_id"), primary_key=True)
-    cycle_cde: Mapped[SmallInteger] = mapped_column(SmallInteger, nullable=False, primary_key=True)  # YYYY-MM-DD format
+    cycle_cde: Mapped[SmallInteger] = mapped_column(SmallInteger, nullable=False, primary_key=True)
     
-    # Newly added fields
+    # Add tr_cusip_id for completeness (not primary key but useful for joins)
+    tr_cusip_id: Mapped[str] = mapped_column(String(14), nullable=False)
+    
+    # Rest of the fields remain the same...
     tr_end_bal_amt: Mapped[float] = mapped_column(Numeric(19, 4), nullable=False)
     tr_prin_rel_ls_amt: Mapped[float] = mapped_column(Numeric(19, 4), nullable=False)
     tr_pass_thru_rte: Mapped[float] = mapped_column(Float(53), nullable=False)

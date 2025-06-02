@@ -4,6 +4,7 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse, RedirectResponse
 
 from app.api.calculations import router as calculations_router
 from app.core.config import settings
@@ -31,8 +32,25 @@ app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
 @app.get("/")
 async def root():
-    """Root endpoint that serves the UI."""
-    return {"message": "Financial Calculations API", "ui_url": "/static/calculation_ui.html"}
+    """Root endpoint with navigation to both interfaces."""
+    return {
+        "message": "Financial Calculations & Report Builder API",
+        "interfaces": {
+            "calculation_builder": "/calculation-builder",
+            "report_builder": "/report-builder",
+            "api_docs": "/docs"
+        }
+    }
+
+@app.get("/calculation-builder")
+async def calculation_builder():
+    """Redirect to calculation builder interface."""
+    return RedirectResponse(url="/static/calculation_ui.html")
+
+@app.get("/report-builder")
+async def report_builder():
+    """Redirect to report builder interface."""
+    return RedirectResponse(url="/static/report_builder.html")
 
 @app.get("/health")
 async def health_check():
