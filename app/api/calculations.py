@@ -567,30 +567,64 @@ async def execute_report(
         # Execute the query
         results = enhanced_query.all()
         
-        # Extract column names
+        # Extract column names from the query description
         column_descriptions = enhanced_query.column_descriptions
         columns = [desc['name'] for desc in column_descriptions]
         
-        # Convert results to rows
+        # Convert results to rows with proper serialization
         rows = []
         for result in results:
             row = []
-            for i, col_desc in enumerate(column_descriptions):
-                try:
-                    if hasattr(result, '_fields'):
-                        # SQLAlchemy Row object
-                        value = getattr(result, col_desc['name'])
-                    else:
-                        # Tuple result
-                        value = result[i] if i < len(result) else None
-                    
-                    # Handle datetime serialization
-                    if isinstance(value, datetime):
-                        value = value.isoformat()
-                    
-                    row.append(value)
-                except (IndexError, AttributeError):
-                    row.append(None)
+            
+            # Handle different types of result objects
+            if hasattr(result, '_fields'):
+                # SQLAlchemy Row object - access by field name
+                for col_name in columns:
+                    try:
+                        value = getattr(result, col_name)
+                        # Handle datetime serialization
+                        if isinstance(value, datetime):
+                            value = value.isoformat()
+                        # Handle None values
+                        elif value is None:
+                            value = None
+                        # Convert to basic Python types
+                        elif hasattr(value, '__dict__'):
+                            # This is a SQLAlchemy model object, extract the primary key or relevant field
+                            if hasattr(value, 'dl_nbr'):
+                                value = value.dl_nbr
+                            elif hasattr(value, 'id'):
+                                value = value.id
+                            else:
+                                value = str(value)
+                        row.append(value)
+                    except AttributeError:
+                        row.append(None)
+            else:
+                # Handle tuple or list results
+                for i, col_desc in enumerate(column_descriptions):
+                    try:
+                        if hasattr(result, '__getitem__') and i < len(result):
+                            value = result[i]
+                        else:
+                            value = getattr(result, col_desc['name'], None)
+                        
+                        # Handle datetime serialization
+                        if isinstance(value, datetime):
+                            value = value.isoformat()
+                        # Handle SQLAlchemy objects
+                        elif hasattr(value, '__dict__') and not isinstance(value, (str, int, float, bool)):
+                            if hasattr(value, 'dl_nbr'):
+                                value = value.dl_nbr
+                            elif hasattr(value, 'id'):
+                                value = value.id
+                            else:
+                                value = str(value)
+                        
+                        row.append(value)
+                    except (IndexError, AttributeError):
+                        row.append(None)
+            
             rows.append(row)
         
         execution_time = int((time.time() - start_time) * 1000)

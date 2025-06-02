@@ -336,3 +336,13 @@ dist/
 .pytest_cache/
 test-results/
 htmlcov/
+
+# Exclude SQLite databases
+financial_calculations.db
+data_warehouse.db
+
+# Exclude generated report files
+demo_financial_report.csv
+demo_financial_report.xlsx
+Custom\ Financial\ Report.csv
+Custom\ Financial\ Report.xlsx
