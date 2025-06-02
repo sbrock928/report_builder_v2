@@ -1,126 +1,89 @@
-"""Database models for report management."""
+"""Database models for report wizard functionality."""
 
-from sqlalchemy import Column, Integer, String, Text, DateTime, Boolean, JSON
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import Column, Integer, String, Text, DateTime, Boolean, ForeignKey
+from sqlalchemy.orm import relationship, Mapped, mapped_column
 from sqlalchemy.sql import func
 from app.core.database import Base
-from typing import Optional, Dict, Any, List
+from typing import Optional, List
 from datetime import datetime
-from pydantic import BaseModel
 
-class SavedReport(Base):
-    """Stores user-defined report templates."""
-    __tablename__ = "saved_reports"
+
+class Report(Base):
+    """Report configuration model stored in config database."""
     
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    name: Mapped[str] = mapped_column(String(100), nullable=False)
+    __tablename__ = "reports"
+    
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    name: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    
-    # Report configuration
-    aggregation_level: Mapped[str] = mapped_column(String(20), nullable=False)  # 'deal' or 'tranche'
-    calculation_ids: Mapped[List[int]] = mapped_column(JSON, nullable=False)  # Array of calculation IDs
-    
-    # Report filters
-    cycle_filter: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
-    additional_filters: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
-    
-    # Metadata
-    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
-    updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())
+    scope: Mapped[str] = mapped_column(String(20), nullable=False)  # 'DEAL' or 'TRANCHE'
+    created_by: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
+    created_date: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+    updated_date: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    
+    # Relationships
+    selected_deals = relationship("ReportDeal", back_populates="report", cascade="all, delete-orphan")
+    selected_fields = relationship("ReportField", back_populates="report", cascade="all, delete-orphan")
+    filter_conditions = relationship("FilterCondition", back_populates="report", cascade="all, delete-orphan")
 
-class ReportRepository:
-    """Repository for managing saved reports."""
-    
-    def __init__(self, session):
-        self.session = session
-    
-    def save_report(self, name: str, description: str = None, aggregation_level: str = None,
-                   calculation_ids: List[int] = None, cycle_filter: int = None, 
-                   additional_filters: dict = None):
-        """Save a report template."""
-        saved_report = SavedReport(
-            name=name,
-            description=description,
-            aggregation_level=aggregation_level,
-            calculation_ids=calculation_ids or [],
-            cycle_filter=cycle_filter,
-            additional_filters=additional_filters
-        )
-        self.session.add(saved_report)
-        self.session.commit()
-        return saved_report
-    
-    def get_report(self, report_id: int):
-        """Get a saved report by ID."""
-        return self.session.query(SavedReport).filter(
-            SavedReport.id == report_id,
-            SavedReport.is_active == True
-        ).first()
-    
-    def get_all_reports(self):
-        """Get all active reports."""
-        return self.session.query(SavedReport).filter(
-            SavedReport.is_active == True
-        ).order_by(SavedReport.name).all()
-    
-    def update_report(self, report_id: int, **updates):
-        """Update a saved report."""
-        report = self.get_report(report_id)
-        if report:
-            for key, value in updates.items():
-                if hasattr(report, key):
-                    setattr(report, key, value)
-            report.updated_at = func.now()
-            self.session.commit()
-        return report
-    
-    def delete_report(self, report_id: int):
-        """Soft delete a report."""
-        report = self.get_report(report_id)
-        if report:
-            report.is_active = False
-            self.session.commit()
-        return report
-    
-    def search_reports(self, search_term: str):
-        """Search reports by name or description."""
-        query = self.session.query(SavedReport).filter(
-            SavedReport.is_active == True
-        )
-        
-        # Search in name and description
-        search_filter = SavedReport.name.ilike(f'%{search_term}%')
-        if hasattr(SavedReport, 'description'):
-            search_filter = search_filter | SavedReport.description.ilike(f'%{search_term}%')
-        
-        query = query.filter(search_filter)
-        return query.order_by(SavedReport.name).all()
 
-# API Models for FastAPI
-class ReportConfigRequest(BaseModel):
-    """Request model for creating reports via API."""
-    name: str
-    description: Optional[str] = None
-    aggregation_level: str
-    calculation_ids: List[int]
-    cycle_filter: Optional[int] = None
-    additional_filters: Optional[Dict[str, Any]] = None
+class ReportDeal(Base):
+    """Report deal association model - stores which deals are selected for a report."""
+    
+    __tablename__ = "report_deals"
+    
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    report_id: Mapped[int] = mapped_column(Integer, ForeignKey("reports.id"), nullable=False)
+    dl_nbr: Mapped[int] = mapped_column(Integer, nullable=False)  # References data warehouse deal dl_nbr
+    
+    # Relationships
+    report = relationship("Report", back_populates="selected_deals")
+    selected_tranches = relationship("ReportTranche", back_populates="report_deal", cascade="all, delete-orphan")
 
-class ReportConfigResponse(BaseModel):
-    """Response model for report data."""
-    id: int
-    name: str
-    description: Optional[str]
-    aggregation_level: str
-    calculation_ids: List[int]
-    cycle_filter: Optional[int]
-    additional_filters: Optional[Dict[str, Any]]
-    created_at: datetime
-    updated_at: datetime
 
-class ReportDropdownData(BaseModel):
-    """Dropdown data for report builder."""
-    available_calculations: List[Dict[str, Any]]
-    aggregation_levels: List[Dict[str, str]]
-    saved_reports: List[ReportConfigResponse]
+class ReportTranche(Base):
+    """Report tranche association model - stores which tranches are selected for a report."""
+    
+    __tablename__ = "report_tranches"
+    
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    report_deal_id: Mapped[int] = mapped_column(Integer, ForeignKey("report_deals.id"), nullable=False)
+    dl_nbr: Mapped[int] = mapped_column(Integer, nullable=False)  # References data warehouse tranche dl_nbr
+    tr_id: Mapped[str] = mapped_column(String(15), nullable=False)  # References data warehouse tranche tr_id
+    
+    # Relationship
+    report_deal = relationship("ReportDeal", back_populates="selected_tranches")
+
+
+class ReportField(Base):
+    """Report field configuration model - stores which fields/calculations are selected for a report."""
+    
+    __tablename__ = "report_fields"
+    
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    report_id: Mapped[int] = mapped_column(Integer, ForeignKey("reports.id"), nullable=False)
+    field_name: Mapped[str] = mapped_column(String(100), nullable=False)  # e.g., "dl_nbr", "calc_name"
+    display_name: Mapped[str] = mapped_column(String(100), nullable=False)  # e.g., "Deal Number", "Total Principal"
+    field_type: Mapped[str] = mapped_column(String(20), nullable=False)  # e.g., "text", "number", "date", "percentage"
+    field_source: Mapped[str] = mapped_column(String(20), nullable=False)  # "raw_field" or "saved_calculation"
+    calculation_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)  # FK to SavedCalculation if field_source='saved_calculation'
+    is_required: Mapped[bool] = mapped_column(Boolean, default=False)
+    
+    # Relationship
+    report = relationship("Report", back_populates="selected_fields")
+
+
+class FilterCondition(Base):
+    """Filter condition model for reports."""
+    
+    __tablename__ = "filter_conditions"
+    
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    report_id: Mapped[int] = mapped_column(Integer, ForeignKey("reports.id"), nullable=False)
+    field_name: Mapped[str] = mapped_column(String(100), nullable=False)  # e.g., "cycle_cde", "dl_nbr"
+    operator: Mapped[str] = mapped_column(String(20), nullable=False)  # e.g., "equals", "greater_than", "in"
+    value: Mapped[Optional[str]] = mapped_column(Text, nullable=True)  # Stored as string, parsed based on field type
+    
+    # Relationship
+    report = relationship("Report", back_populates="filter_conditions")

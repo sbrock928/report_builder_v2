@@ -2,7 +2,8 @@
 
 from .dwh_models import Deal, Tranche, TrancheBal
 from .calculations import SavedCalculation, CalculationRepository
-from .reports import SavedReport, ReportRepository
+from .reports import Report, ReportDeal, ReportTranche, ReportField, FilterCondition
+from .report_repository import ReportRepository
 
 __all__ = [
     "Deal",
@@ -10,6 +11,10 @@ __all__ = [
     "TrancheBal",
     "SavedCalculation",
     "CalculationRepository",
-    "SavedReport",
+    "Report",
+    "ReportDeal", 
+    "ReportTranche",
+    "ReportField",
+    "FilterCondition",
     "ReportRepository"
 ]

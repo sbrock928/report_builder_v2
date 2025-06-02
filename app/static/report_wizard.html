@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Report Wizard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+
+        .main-content {
+            padding: 30px;
+        }
+
+        .wizard-section {
+            margin-bottom: 40px;
+        }
+
+        .section-title {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            font-weight: 600;
+            border-bottom: 2px solid #e9ecef;
+            padding-bottom: 10px;
+        }
+
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: 2px solid #e9ecef;
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            border-color: #667eea;
+        }
+
+        .card h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+            transform: translateY(-2px);
+        }
+
+        .btn-info {
+            background: #17a2b8;
+            color: white;
+        }
+
+        .btn-info:hover {
+            background: #138496;
+            transform: translateY(-2px);
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .results-table th {
+            background: #2c3e50;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .results-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .results-table tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .list-item {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            padding: 10px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .list-item:hover {
+            background: #e9ecef;
+            border-color: #667eea;
+        }
+
+        .list-item.selected {
+            background: #e7f3ff;
+            border-color: #667eea;
+            color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧙‍♂️ Report Wizard</h1>
+            <p>Create powerful financial reports with the step-by-step wizard</p>
+        </div>
+
+        <div class="main-content">
+            <div id="alert-container"></div>
+
+            <!-- Saved Reports Management -->
+            <div class="wizard-section">
+                <h2 class="section-title">Saved Reports</h2>
+                <div class="cards-grid">
+                    <div class="card">
+                        <h3>Manage Reports</h3>
+                        <div class="form-group">
+                            <label for="savedReports">Saved Report Configurations</label>
+                            <select id="savedReports" class="form-control">
+                                <option value="">Loading...</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-primary" onclick="loadReportForEdit()">Edit Selected</button>
+                        <button class="btn btn-info" onclick="duplicateReport()">Duplicate</button>
+                        <button class="btn btn-success" onclick="executeReport()">Execute</button>
+                    </div>
+
+                    <div class="card">
+                        <h3>Quick Actions</h3>
+                        <p>Get started with common report types:</p>
+                        <button class="btn btn-primary" onclick="startNewReport('DEAL')">New Deal Report</button>
+                        <button class="btn btn-primary" onclick="startNewReport('TRANCHE')">New Tranche Report</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Report Builder Form -->
+            <div class="wizard-section" id="reportBuilder" style="display: none;">
+                <h2 class="section-title">Report Builder</h2>
+                
+                <div class="cards-grid">
+                    <!-- Basic Configuration -->
+                    <div class="card">
+                        <h3>Step 1: Basic Configuration</h3>
+                        <div class="form-group">
+                            <label for="reportName">Report Name</label>
+                            <input type="text" id="reportName" class="form-control" placeholder="Enter report name">
+                        </div>
+                        <div class="form-group">
+                            <label for="reportDescription">Description</label>
+                            <textarea id="reportDescription" class="form-control" rows="3" placeholder="Describe the report purpose"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="reportScope">Report Scope</label>
+                            <select id="reportScope" class="form-control" onchange="onScopeChange()">
+                                <option value="">Select scope...</option>
+                                <option value="DEAL">Deal Level (Aggregated)</option>
+                                <option value="TRANCHE">Tranche Level (Detailed)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Deal Selection -->
+                    <div class="card">
+                        <h3>Step 2: Select Deals</h3>
+                        <div class="form-group">
+                            <label>Available Deals</label>
+                            <div id="dealsList" style="max-height: 200px; overflow-y: auto;">
+                                <p>Configure report scope first...</p>
+                            </div>
+                        </div>
+                        <button class="btn btn-info" onclick="loadDeals()">Load Deals</button>
+                        <button class="btn btn-success" onclick="selectAllDeals()">Select All</button>
+                    </div>
+
+                    <!-- Field Selection -->
+                    <div class="card">
+                        <h3>Step 3: Select Fields</h3>
+                        <div class="form-group">
+                            <label>Available Fields</label>
+                            <div id="fieldsList" style="max-height: 200px; overflow-y: auto;">
+                                <p>Select deals first...</p>
+                            </div>
+                        </div>
+                        <button class="btn btn-info" onclick="loadFields()">Load Fields</button>
+                        <button class="btn btn-success" onclick="selectDefaultFields()">Select Defaults</button>
+                    </div>
+                </div>
+
+                <!-- Execution Panel -->
+                <div class="card">
+                    <h3>Step 4: Execute & Export</h3>
+                    <div class="form-group">
+                        <label for="cycleFilter">Cycle Filter</label>
+                        <input type="number" id="cycleFilter" class="form-control" placeholder="e.g., 202412" value="202412">
+                    </div>
+                    <button class="btn btn-success" onclick="saveReport()">Save Report</button>
+                    <button class="btn btn-primary" onclick="executeCurrentReport()">Execute Report</button>
+                    <button class="btn btn-info" onclick="exportReport('csv')">Export CSV</button>
+                    <button class="btn btn-info" onclick="exportReport('excel')">Export Excel</button>
+                </div>
+            </div>
+
+            <!-- Results Section -->
+            <div class="wizard-section" id="resultsSection" style="display: none;">
+                <h2 class="section-title">Report Results</h2>
+                <div id="resultsContainer">
+                    <!-- Results will be populated here -->
+                </div>
+            </div>
+
+            <!-- Loading Indicator -->
+            <div class="loading" id="loadingIndicator">
+                <div class="spinner"></div>
+                <p>Processing request...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global state
+        const API_BASE = '/api/report-wizard';
+        let savedReports = [];
+        let selectedDeals = [];
+        let selectedFields = [];
+        let availableFields = [];
+        let currentReportId = null;
+        let lastExecutionResult = null;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSavedReports();
+        });
+
+        // Utility functions
+        function showAlert(message, type) {
+            const container = document.getElementById('alert-container');
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.textContent = message;
+            
+            container.innerHTML = '';
+            container.appendChild(alertDiv);
+            
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 5000);
+        }
+
+        function showLoading(show = true) {
+            document.getElementById('loadingIndicator').style.display = show ? 'block' : 'none';
+        }
+
+        // Load saved reports
+        async function loadSavedReports() {
+            try {
+                const response = await fetch(`${API_BASE}/reports`);
+                if (!response.ok) throw new Error('Failed to load reports');
+                
+                savedReports = await response.json();
+                
+                const select = document.getElementById('savedReports');
+                select.innerHTML = '<option value="">Select a saved report...</option>';
+                
+                savedReports.forEach(report => {
+                    const option = document.createElement('option');
+                    option.value = report.id;
+                    option.textContent = `${report.name} (${report.scope}, ${report.deal_count} deals)`;
+                    select.appendChild(option);
+                });
+                
+            } catch (error) {
+                console.error('Error loading reports:', error);
+                showAlert('Failed to load saved reports', 'error');
+            }
+        }
+
+        // Start new report
+        function startNewReport(scope) {
+            document.getElementById('reportBuilder').style.display = 'block';
+            document.getElementById('reportScope').value = scope;
+            document.getElementById('reportName').value = `New ${scope} Report`;
+            currentReportId = null;
+            selectedDeals = [];
+            selectedFields = [];
+            onScopeChange();
+        }
+
+        // Load report for editing
+        async function loadReportForEdit() {
+            const reportId = document.getElementById('savedReports').value;
+            if (!reportId) {
+                showAlert('Please select a report to edit', 'error');
+                return;
+            }
+
+            try {
+                showLoading();
+                const response = await fetch(`${API_BASE}/reports/${reportId}`);
+                if (!response.ok) throw new Error('Failed to load report');
+                
+                const report = await response.json();
+                
+                // Populate form
+                document.getElementById('reportName').value = report.name;
+                document.getElementById('reportDescription').value = report.description || '';
+                document.getElementById('reportScope').value = report.scope;
+                
+                // Set selected deals and fields
+                selectedDeals = report.selected_deals.map(deal => deal.dl_nbr);
+                selectedFields = report.selected_fields;
+                
+                currentReportId = report.id;
+                document.getElementById('reportBuilder').style.display = 'block';
+                
+                await loadDeals();
+                await loadFields();
+                
+                showAlert('Report loaded for editing', 'success');
+                
+            } catch (error) {
+                console.error('Error loading report:', error);
+                showAlert('Failed to load report for editing', 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Scope change handler
+        function onScopeChange() {
+            selectedDeals = [];
+            selectedFields = [];
+            document.getElementById('dealsList').innerHTML = '<p>Click "Load Deals" to continue...</p>';
+            document.getElementById('fieldsList').innerHTML = '<p>Select deals first...</p>';
+        }
+
+        // Load available deals
+        async function loadDeals() {
+            try {
+                showLoading();
+                const response = await fetch(`${API_BASE}/deals`);
+                if (!response.ok) throw new Error('Failed to load deals');
+                
+                const deals = await response.json();
+                
+                const container = document.getElementById('dealsList');
+                container.innerHTML = '';
+                
+                deals.forEach(deal => {
+                    const div = document.createElement('div');
+                    div.className = `list-item ${selectedDeals.includes(deal.dl_nbr) ? 'selected' : ''}`;
+                    div.textContent = `${deal.dl_nbr} - ${deal.issr_cde}`;
+                    div.onclick = () => toggleDeal(deal.dl_nbr, div);
+                    container.appendChild(div);
+                });
+                
+            } catch (error) {
+                console.error('Error loading deals:', error);
+                showAlert('Failed to load deals', 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Toggle deal selection
+        function toggleDeal(dlNbr, element) {
+            if (selectedDeals.includes(dlNbr)) {
+                selectedDeals = selectedDeals.filter(id => id !== dlNbr);
+                element.classList.remove('selected');
+            } else {
+                selectedDeals.push(dlNbr);
+                element.classList.add('selected');
+            }
+        }
+
+        // Select all deals
+        function selectAllDeals() {
+            const dealItems = document.querySelectorAll('#dealsList .list-item');
+            dealItems.forEach(item => {
+                if (!item.classList.contains('selected')) {
+                    item.click();
+                }
+            });
+        }
+
+        // Load available fields
+        async function loadFields() {
+            const scope = document.getElementById('reportScope').value;
+            if (!scope) {
+                showAlert('Please select a report scope first', 'error');
+                return;
+            }
+
+            try {
+                showLoading();
+                const response = await fetch(`${API_BASE}/fields/${scope}`);
+                if (!response.ok) throw new Error('Failed to load fields');
+                
+                availableFields = await response.json();
+                
+                const container = document.getElementById('fieldsList');
+                container.innerHTML = '';
+                
+                availableFields.forEach(field => {
+                    const div = document.createElement('div');
+                    div.className = `list-item ${selectedFields.some(f => f.field_name === field.field_name) ? 'selected' : ''}`;
+                    div.innerHTML = `<strong>${field.display_name}</strong><br><small>${field.description || field.field_name}</small>`;
+                    div.onclick = () => toggleField(field, div);
+                    container.appendChild(div);
+                });
+                
+            } catch (error) {
+                console.error('Error loading fields:', error);
+                showAlert('Failed to load fields', 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Toggle field selection
+        function toggleField(field, element) {
+            const existingIndex = selectedFields.findIndex(f => f.field_name === field.field_name);
+            
+            if (existingIndex >= 0) {
+                selectedFields.splice(existingIndex, 1);
+                element.classList.remove('selected');
+            } else {
+                selectedFields.push({
+                    field_name: field.field_name,
+                    display_name: field.display_name,
+                    field_type: field.field_type,
+                    field_source: field.field_source,
+                    calculation_id: field.calculation_id
+                });
+                element.classList.add('selected');
+            }
+        }
+
+        // Select default fields
+        function selectDefaultFields() {
+            availableFields.forEach(field => {
+                if (field.is_default && !selectedFields.some(f => f.field_name === field.field_name)) {
+                    const element = Array.from(document.querySelectorAll('#fieldsList .list-item'))
+                        .find(el => el.innerHTML.includes(field.display_name));
+                    if (element) {
+                        toggleField(field, element);
+                    }
+                }
+            });
+        }
+
+        // Save report
+        async function saveReport() {
+            const name = document.getElementById('reportName').value;
+            const description = document.getElementById('reportDescription').value;
+            const scope = document.getElementById('reportScope').value;
+
+            if (!name || !scope || selectedDeals.length === 0 || selectedFields.length === 0) {
+                showAlert('Please fill in all required fields and select deals/fields', 'error');
+                return;
+            }
+
+            const reportData = {
+                name,
+                description,
+                scope,
+                created_by: 'wizard_user',
+                selected_deals: selectedDeals.map(dlNbr => ({ dl_nbr: dlNbr, selected_tranches: [] })),
+                selected_fields: selectedFields,
+                filter_conditions: []
+            };
+
+            try {
+                showLoading();
+                let response;
+                
+                if (currentReportId) {
+                    // Update existing report
+                    response = await fetch(`${API_BASE}/reports/${currentReportId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(reportData)
+                    });
+                } else {
+                    // Create new report
+                    response = await fetch(`${API_BASE}/reports`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(reportData)
+                    });
+                }
+
+                if (!response.ok) throw new Error('Failed to save report');
+                
+                const savedReport = await response.json();
+                currentReportId = savedReport.id;
+                
+                await loadSavedReports();
+                showAlert('Report saved successfully!', 'success');
+                
+            } catch (error) {
+                console.error('Error saving report:', error);
+                showAlert('Failed to save report', 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Execute current report
+        async function executeCurrentReport() {
+            if (!currentReportId) {
+                showAlert('Please save the report first', 'error');
+                return;
+            }
+
+            const cycleFilter = document.getElementById('cycleFilter').value;
+            
+            try {
+                showLoading();
+                const url = `${API_BASE}/reports/${currentReportId}/execute${cycleFilter ? `?cycle_filter=${cycleFilter}` : ''}`;
+                const response = await fetch(url, { method: 'POST' });
+                
+                if (!response.ok) throw new Error('Failed to execute report');
+                
+                const result = await response.json();
+                lastExecutionResult = result;
+                displayResults(result);
+                
+                showAlert(`Report executed successfully! Found ${result.row_count} rows.`, 'success');
+                
+            } catch (error) {
+                console.error('Error executing report:', error);
+                showAlert('Failed to execute report', 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Execute saved report
+        async function executeReport() {
+            const reportId = document.getElementById('savedReports').value;
+            if (!reportId) {
+                showAlert('Please select a report to execute', 'error');
+                return;
+            }
+
+            const cycleFilter = document.getElementById('cycleFilter').value;
+            
+            try {
+                showLoading();
+                const url = `${API_BASE}/reports/${reportId}/execute${cycleFilter ? `?cycle_filter=${cycleFilter}` : ''}`;
+                const response = await fetch(url, { method: 'POST' });
+                
+                if (!response.ok) throw new Error('Failed to execute report');
+                
+                const result = await response.json();
+                lastExecutionResult = result;
+                displayResults(result);
+                
+                showAlert(`Report executed successfully! Found ${result.row_count} rows.`, 'success');
+                
+            } catch (error) {
+                console.error('Error executing report:', error);
+                showAlert('Failed to execute report', 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Display results
+        function displayResults(result) {
+            const container = document.getElementById('resultsContainer');
+            
+            if (!result.rows || result.rows.length === 0) {
+                container.innerHTML = '<div class="alert alert-info">No data found for the specified criteria.</div>';
+            } else {
+                let html = '<table class="results-table"><thead><tr>';
+                
+                result.columns.forEach(col => {
+                    html += `<th>${col.header}</th>`;
+                });
+                html += '</tr></thead><tbody>';
+                
+                // Show first 20 rows
+                result.rows.slice(0, 20).forEach(row => {
+                    html += '<tr>';
+                    result.columns.forEach(col => {
+                        const value = row[col.field];
+                        const formattedValue = value !== null && value !== undefined ? 
+                            (typeof value === 'number' ? value.toLocaleString() : value) : '';
+                        html += `<td>${formattedValue}</td>`;
+                    });
+                    html += '</tr>';
+                });
+                
+                html += '</tbody></table>';
+                
+                if (result.rows.length > 20) {
+                    html += `<p style="margin-top: 15px; text-align: center; color: #6c757d;">Showing first 20 of ${result.row_count} total rows. Export to see all data.</p>`;
+                }
+                
+                container.innerHTML = html;
+            }
+            
+            document.getElementById('resultsSection').style.display = 'block';
+        }
+
+        // Export report
+        async function exportReport(format) {
+            if (!lastExecutionResult) {
+                showAlert('Please execute a report first', 'error');
+                return;
+            }
+
+            const reportId = currentReportId || document.getElementById('savedReports').value;
+            if (!reportId) {
+                showAlert('No report selected for export', 'error');
+                return;
+            }
+
+            const cycleFilter = document.getElementById('cycleFilter').value;
+            
+            try {
+                showLoading();
+                const url = `${API_BASE}/reports/${reportId}/export/${format}${cycleFilter ? `?cycle_filter=${cycleFilter}` : ''}`;
+                const response = await fetch(url, { method: 'POST' });
+                
+                if (!response.ok) throw new Error(`Failed to export ${format.toUpperCase()}`);
+                
+                // Download the file
+                const blob = await response.blob();
+                const url2 = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url2;
+                a.download = `report.${format}`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url2);
+                document.body.removeChild(a);
+                
+                showAlert(`Report exported as ${format.toUpperCase()} successfully!`, 'success');
+                
+            } catch (error) {
+                console.error(`Error exporting ${format}:`, error);
+                showAlert(`Failed to export ${format.toUpperCase()}`, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Duplicate report
+        async function duplicateReport() {
+            await loadReportForEdit();
+            if (currentReportId) {
+                const nameField = document.getElementById('reportName');
+                nameField.value = nameField.value + ' (Copy)';
+                currentReportId = null;
+                showAlert('Report loaded for duplication. Click "Save Report" to create the copy.', 'info');
+            }
+        }
+    </script>
+</body>
+</html>

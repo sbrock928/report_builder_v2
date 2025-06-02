@@ -4,14 +4,15 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse, RedirectResponse
 
 from app.api.calculations import router as calculations_router
-from app.api.reports import router as reports_router
+from app.api.report_wizard import router as report_wizard_router
 from app.core.config import settings
 
 app = FastAPI(
-    title="Financial Calculations API",
-    description="Dynamic calculation builder and report generator for financial data",
+    title="Financial Calculations & Report Builder API",
+    description="Dynamic calculation builder and report wizard for financial data",
     version="1.0.0"
 )
 
@@ -26,19 +27,38 @@ app.add_middleware(
 
 # Include API routes
 app.include_router(calculations_router, prefix="/api")
-app.include_router(reports_router, prefix="/api")
+app.include_router(report_wizard_router, prefix="/api/report-wizard")
 
 # Serve static files (UI)
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
 @app.get("/")
 async def root():
-    """Root endpoint that serves the UI."""
+    """Root endpoint with navigation to interfaces."""
     return {
-        "message": "Financial Calculations API", 
-        "calculation_ui": "/static/calculation_ui.html",
-        "report_builder": "/static/report_builder.html"
+        "message": "Financial Calculations & Report Builder API",
+        "interfaces": {
+            "calculation_builder": "/calculation-builder",
+            "report_builder": "/report-builder", 
+            "report_wizard": "/report-wizard",
+            "api_docs": "/docs"
+        }
     }
+
+@app.get("/calculation-builder")
+async def calculation_builder():
+    """Redirect to calculation builder interface."""
+    return RedirectResponse(url="/static/calculation_ui.html")
+
+@app.get("/report-builder") 
+async def report_builder():
+    """Redirect to legacy report builder interface."""
+    return RedirectResponse(url="/static/report_builder.html")
+
+@app.get("/report-wizard")
+async def report_wizard():
+    """Redirect to new report wizard interface."""
+    return RedirectResponse(url="/static/report_wizard.html")
 
 @app.get("/health")
 async def health_check():

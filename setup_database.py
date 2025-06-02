@@ -2,6 +2,8 @@
 
 from app.core.database import create_tables, create_dw_tables, DWSessionLocal
 from app.models.dwh_models import Deal, Tranche, TrancheBal
+from app.models.reports import Report, ReportDeal, ReportTranche, ReportField, FilterCondition
+from app.models.calculations import SavedCalculation
 import random
 from datetime import datetime
 
@@ -79,10 +81,122 @@ def seed_sample_dw_data():
     session.close()
     print(f"✓ Created {len(tranche_bals)} sample tranche balance records")
 
+def seed_sample_report_data():
+    """Seed sample report configurations for testing."""
+    from app.core.database import SessionLocal
+    from app.models.report_repository import ReportRepository
+    
+    session = SessionLocal()
+    repo = ReportRepository(session)
+    
+    # Check if reports already exist
+    existing_reports = repo.get_all_reports()
+    if existing_reports:
+        print(f"- Report database already has {len(existing_reports)} reports")
+        session.close()
+        return
+    
+    print("📊 Creating sample report configurations...")
+    
+    # Sample Deal-Level Report
+    deal_report = repo.create_report(
+        name="Deal Summary Report",
+        description="High-level deal summary with key financial metrics",
+        scope="DEAL",
+        created_by="system",
+        selected_deals=[
+            {"dl_nbr": 12341, "selected_tranches": []},
+            {"dl_nbr": 12342, "selected_tranches": []},
+            {"dl_nbr": 12343, "selected_tranches": []}
+        ],
+        selected_fields=[
+            {
+                "field_name": "dl_nbr",
+                "display_name": "Deal Number",
+                "field_type": "number",
+                "field_source": "raw_field",
+                "is_required": True
+            },
+            {
+                "field_name": "issr_cde",
+                "display_name": "Issuer Code",
+                "field_type": "text",
+                "field_source": "raw_field",
+                "is_required": True
+            },
+            {
+                "field_name": "tr_end_bal_amt",
+                "display_name": "Total Ending Balance",
+                "field_type": "number",
+                "field_source": "raw_field"
+            },
+            {
+                "field_name": "tr_prin_dstrb_amt",
+                "display_name": "Total Principal Distribution",
+                "field_type": "number",
+                "field_source": "raw_field"
+            }
+        ]
+    )
+    
+    # Sample Tranche-Level Report
+    tranche_report = repo.create_report(
+        name="Tranche Detail Report",
+        description="Detailed tranche-level financial data",
+        scope="TRANCHE",
+        created_by="system",
+        selected_deals=[
+            {
+                "dl_nbr": 12341, 
+                "selected_tranches": [
+                    {"dl_nbr": 12341, "tr_id": "A1"},
+                    {"dl_nbr": 12341, "tr_id": "A2"}
+                ]
+            },
+            {
+                "dl_nbr": 12342,
+                "selected_tranches": [
+                    {"dl_nbr": 12342, "tr_id": "A1"}
+                ]
+            }
+        ],
+        selected_fields=[
+            {
+                "field_name": "dl_nbr",
+                "display_name": "Deal Number",
+                "field_type": "number",
+                "field_source": "raw_field",
+                "is_required": True
+            },
+            {
+                "field_name": "tr_id",
+                "display_name": "Tranche ID",
+                "field_type": "text",
+                "field_source": "raw_field",
+                "is_required": True
+            },
+            {
+                "field_name": "tr_end_bal_amt",
+                "display_name": "Ending Balance",
+                "field_type": "number",
+                "field_source": "raw_field"
+            },
+            {
+                "field_name": "tr_pass_thru_rte",
+                "display_name": "Pass Through Rate",
+                "field_type": "percentage",
+                "field_source": "raw_field"
+            }
+        ]
+    )
+    
+    session.close()
+    print(f"✓ Created 2 sample report configurations")
+
 def main():
     """Main setup function."""
-    print("🚀 Setting up Financial Calculations Database")
-    print("=" * 50)
+    print("🚀 Setting up Financial Calculations & Report Wizard Database")
+    print("=" * 70)
     
     # Create main application tables
     print("📊 Creating main application tables...")
@@ -98,11 +212,16 @@ def main():
     print("🌱 Seeding sample data warehouse data...")
     seed_sample_dw_data()
     
+    # Seed sample report configurations
+    print("📋 Seeding sample report configurations...")
+    seed_sample_report_data()
+    
     print("\n✅ Database setup completed successfully!")
     print("\nNext steps:")
     print("1. Run: python main.py")
-    print("2. Open: http://localhost:8000/static/calculation_ui.html")
-    print("3. Create your first custom calculation!")
+    print("2. Open: http://localhost:8000/report-wizard")
+    print("3. Create and execute your first report!")
+    print("4. Or use the calculation builder: http://localhost:8000/calculation-builder")
 
 if __name__ == "__main__":
     main()
